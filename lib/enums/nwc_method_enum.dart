@@ -1,3 +1,5 @@
+import 'package:nwc_wallet/constants/nostr_constants.dart';
+
 enum NwcMethod {
   payInvoice,
   multiPayInvoice,
@@ -14,45 +16,45 @@ extension NwcMethodX on NwcMethod {
   String get plaintext {
     switch (this) {
       case NwcMethod.payInvoice:
-        return 'pay_invoice';
+        return NostrConstants.nwcPayInvoiceMethod;
       case NwcMethod.multiPayInvoice:
-        return 'multi_pay_invoice';
+        return NostrConstants.nwcMultiPayInvoiceMethod;
       case NwcMethod.payKeysend:
-        return 'pay_keysend';
+        return NostrConstants.nwcPayKeysendMethod;
       case NwcMethod.multiPayKeysend:
-        return 'multi_pay_keysend';
+        return NostrConstants.nwcMultiPayKeysendMethod;
       case NwcMethod.makeInvoice:
-        return 'make_invoice';
+        return NostrConstants.nwcMakeInvoiceMethod;
       case NwcMethod.lookupInvoice:
-        return 'lookup_invoice';
+        return NostrConstants.nwcLookupInvoiceMethod;
       case NwcMethod.listTransactions:
-        return 'list_transactions';
+        return NostrConstants.nwcListTransactionsMethod;
       case NwcMethod.getBalance:
-        return 'get_balance';
+        return NostrConstants.nwcGetBalanceMethod;
       case NwcMethod.getInfo:
-        return 'get_info';
+        return NostrConstants.nwcGetInfoMethod;
     }
   }
 
   static NwcMethod fromPlaintext(String plaintext) {
     switch (plaintext) {
-      case 'pay_invoice':
+      case NostrConstants.nwcPayInvoiceMethod:
         return NwcMethod.payInvoice;
-      case 'multi_pay_invoice':
+      case NostrConstants.nwcMultiPayInvoiceMethod:
         return NwcMethod.multiPayInvoice;
-      case 'pay_keysend':
+      case NostrConstants.nwcPayKeysendMethod:
         return NwcMethod.payKeysend;
-      case 'multi_pay_keysend':
+      case NostrConstants.nwcMultiPayKeysendMethod:
         return NwcMethod.multiPayKeysend;
-      case 'make_invoice':
+      case NostrConstants.nwcMakeInvoiceMethod:
         return NwcMethod.makeInvoice;
-      case 'lookup_invoice':
+      case NostrConstants.nwcLookupInvoiceMethod:
         return NwcMethod.lookupInvoice;
-      case 'list_transactions':
+      case NostrConstants.nwcListTransactionsMethod:
         return NwcMethod.listTransactions;
-      case 'get_balance':
+      case NostrConstants.nwcGetBalanceMethod:
         return NwcMethod.getBalance;
-      case 'get_info':
+      case NostrConstants.nwcGetInfoMethod:
         return NwcMethod.getInfo;
       default:
         throw Exception('Unknown NWC method: $plaintext');

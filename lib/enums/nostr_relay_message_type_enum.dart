@@ -1,3 +1,5 @@
+import 'package:nwc_wallet/constants/nostr_constants.dart';
+
 enum NostrRelayMessageType {
   event, // used to send events requested by clients
   ok, // used to indicate acceptance or denial of an EVENT message
@@ -10,29 +12,29 @@ extension NostrRelayMessageTypeX on NostrRelayMessageType {
   String get value {
     switch (this) {
       case NostrRelayMessageType.event:
-        return 'EVENT';
+        return NostrConstants.relayMessageEventType;
       case NostrRelayMessageType.ok:
-        return 'OK';
+        return NostrConstants.relayMessageOkType;
       case NostrRelayMessageType.eose:
-        return 'EOSE';
+        return NostrConstants.relayMessageEoseType;
       case NostrRelayMessageType.closed:
-        return 'CLOSED';
+        return NostrConstants.relayMessageClosedType;
       case NostrRelayMessageType.notice:
-        return 'NOTICE';
+        return NostrConstants.relayMessageNoticeType;
     }
   }
 
   static NostrRelayMessageType fromValue(String value) {
     switch (value) {
-      case 'EVENT':
+      case NostrConstants.relayMessageEventType:
         return NostrRelayMessageType.event;
-      case 'OK':
+      case NostrConstants.relayMessageOkType:
         return NostrRelayMessageType.ok;
-      case 'EOSE':
+      case NostrConstants.relayMessageEoseType:
         return NostrRelayMessageType.eose;
-      case 'CLOSED':
+      case NostrConstants.relayMessageClosedType:
         return NostrRelayMessageType.closed;
-      case 'NOTICE':
+      case NostrConstants.relayMessageNoticeType:
         return NostrRelayMessageType.notice;
       default:
         throw Exception('Unknown NostrRelayMessageType: $value');

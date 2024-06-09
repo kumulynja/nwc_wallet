@@ -6,10 +6,10 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 
 abstract class NostrRelayProvider {
-  void connect();
-  void disconnect();
-  void sendMessage(NostrClientMessage message);
   Stream<NostrRelayMessage> get messages;
+  void connect();
+  void sendMessage(NostrClientMessage message);
+  void disconnect();
 }
 
 class NostrRelayProviderImpl implements NostrRelayProvider {
@@ -18,7 +18,9 @@ class NostrRelayProviderImpl implements NostrRelayProvider {
   final StreamController<NostrRelayMessage> _messageController =
       StreamController.broadcast();
 
-  NostrRelayProviderImpl(this.relayUrl);
+  NostrRelayProviderImpl(
+    this.relayUrl,
+  );
 
   @override
   Stream<NostrRelayMessage> get messages => _messageController.stream;
@@ -37,14 +39,13 @@ class NostrRelayProviderImpl implements NostrRelayProvider {
   }
 
   @override
-  void disconnect() {
-    _channel?.sink.close(status.goingAway);
-    _channel = null;
-  }
-
-  @override
   void sendMessage(NostrClientMessage message) {
     final serializedMessage = message.serialized;
     _channel?.sink.add(serializedMessage);
+  }
+
+  @override
+  void disconnect() {
+    _channel?.sink.close(status.goingAway);
   }
 }

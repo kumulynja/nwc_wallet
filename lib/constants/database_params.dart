@@ -10,10 +10,9 @@ class DatabaseParams {
   static const String columnSecret = 'secret';
   static const String columnMonthlyLimitSat = 'monthlyLimitSat';
   static const String columnExpiry = 'expiry';
+  static const String columnConnectionStatus = 'connectionStatus';
   static const String columnIsDeactivated = 'isDeactivated';
   static const String columnCreatedAt = 'createdAt';
   static const String columnUpdatedAt = 'updatedAt';
   static const String columnDeactivatedAt = 'deactivatedAt';
-  static const String columnConnectionId = 'connectionId';
-  static const String columnMethod = 'method';
 }

@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/constants/database_params.dart';
+import 'package:nwc_wallet/enums/nwc_connection_status.dart';
 import 'package:nwc_wallet/enums/nwc_method_enum.dart';
 
 @immutable
@@ -12,6 +13,7 @@ class NwcConnectionModel extends Equatable {
   final String secret;
   final int? monthlyLimitSat;
   final int? expiry;
+  final NwcConnectionStatus connectionStatus;
   final bool? isDeactivated;
   final int createdAt;
   final int updatedAt;
@@ -25,6 +27,7 @@ class NwcConnectionModel extends Equatable {
     required this.secret,
     this.monthlyLimitSat,
     this.expiry,
+    this.connectionStatus = NwcConnectionStatus.disconnected,
     this.isDeactivated,
     required this.createdAt,
     required this.updatedAt,
@@ -39,6 +42,7 @@ class NwcConnectionModel extends Equatable {
     String? secret,
     int? monthlyLimitSat,
     int? expiry,
+    NwcConnectionStatus? connectionStatus,
     bool? isDeactivated,
     int? createdAt,
     int? updatedAt,
@@ -52,6 +56,7 @@ class NwcConnectionModel extends Equatable {
       secret: secret ?? this.secret,
       monthlyLimitSat: monthlyLimitSat ?? this.monthlyLimitSat,
       expiry: expiry ?? this.expiry,
+      connectionStatus: connectionStatus ?? this.connectionStatus,
       isDeactivated: isDeactivated ?? this.isDeactivated,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -71,6 +76,7 @@ class NwcConnectionModel extends Equatable {
       DatabaseParams.columnSecret: secret,
       DatabaseParams.columnMonthlyLimitSat: monthlyLimitSat,
       DatabaseParams.columnExpiry: expiry,
+      DatabaseParams.columnConnectionStatus: connectionStatus.name,
       DatabaseParams.columnIsDeactivated: isDeactivated == true ? 1 : 0,
       DatabaseParams.columnCreatedAt: createdAt,
       DatabaseParams.columnUpdatedAt: updatedAt,
@@ -100,6 +106,9 @@ class NwcConnectionModel extends Equatable {
       secret: map[DatabaseParams.columnSecret],
       monthlyLimitSat: map[DatabaseParams.columnMonthlyLimitSat],
       expiry: map[DatabaseParams.columnExpiry],
+      connectionStatus: NwcConnectionStatusX.fromName(
+        map[DatabaseParams.columnConnectionStatus],
+      ),
       isDeactivated: map[DatabaseParams.columnIsDeactivated] == 1,
       createdAt: map[DatabaseParams.columnCreatedAt],
       updatedAt: map[DatabaseParams.columnUpdatedAt],
@@ -117,6 +126,7 @@ class NwcConnectionModel extends Equatable {
         '${DatabaseParams.columnSecret}: $secret,'
         '${DatabaseParams.columnMonthlyLimitSat}: $monthlyLimitSat,'
         '${DatabaseParams.columnExpiry}: $expiry,'
+        '${DatabaseParams.columnConnectionStatus}: $connectionStatus,'
         '${DatabaseParams.columnIsDeactivated}: $isDeactivated,'
         '${DatabaseParams.columnCreatedAt}: $createdAt,'
         '${DatabaseParams.columnUpdatedAt}: $updatedAt,'
@@ -132,6 +142,7 @@ class NwcConnectionModel extends Equatable {
         secret,
         monthlyLimitSat,
         expiry,
+        connectionStatus,
         isDeactivated,
         createdAt,
         updatedAt,

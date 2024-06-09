@@ -4,13 +4,14 @@ import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:nwc_wallet/enums/nostr_event_kind_enum.dart';
 
 @immutable
 class NostrEvent extends Equatable {
   final String? id;
   final String pubkey;
   final int createdAt;
-  final int kind;
+  final NostrEventKind kind;
   final List<List<String>> tags;
   final String content;
   final String? sig;
@@ -30,7 +31,7 @@ class NostrEvent extends Equatable {
       id: map['id'],
       pubkey: map['pubkey'],
       createdAt: map['createdAt'],
-      kind: map['kind'],
+      kind: NostrEventKindX.fromValue(map['kind']),
       tags: List<List<String>>.from(map['tags']),
       content: map['content'],
       sig: map['sig'],
@@ -41,7 +42,7 @@ class NostrEvent extends Equatable {
     String? id,
     String? pubkey,
     int? createdAt,
-    int? kind,
+    NostrEventKind? kind,
     List<List<String>>? tags,
     String? content,
     String? sig,
@@ -62,7 +63,7 @@ class NostrEvent extends Equatable {
       0,
       pubkey.toLowerCase(),
       createdAt,
-      kind,
+      kind.value,
       tags,
       content,
     ];
@@ -80,7 +81,7 @@ class NostrEvent extends Equatable {
       'id': id,
       'pubkey': pubkey,
       'createdAt': createdAt,
-      'kind': kind,
+      'kind': kind.value,
       'tags': tags,
       'content': content,
       'sig': sig,

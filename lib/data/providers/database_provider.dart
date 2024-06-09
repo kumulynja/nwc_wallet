@@ -46,23 +46,11 @@ class DatabaseProviderImpl implements DatabaseProvider {
         ${DatabaseParams.columnSecret} $textType,
         ${DatabaseParams.columnMonthlyLimitSat} $intType,
         ${DatabaseParams.columnExpiry} $intType,
+        ${DatabaseParams.columnConnectionStatus} $textType,
         ${DatabaseParams.columnIsDeactivated} $intType,
         ${DatabaseParams.columnCreatedAt} $intType,
         ${DatabaseParams.columnUpdatedAt} $intType,
         ${DatabaseParams.columnDeactivatedAt} $intType
-        )
-      ''',
-    );
-
-    await db.execute(
-      '''
-      CREATE TABLE ${DatabaseParams.nwcRequestsTable} (
-        ${DatabaseParams.columnId} $idType,
-        ${DatabaseParams.columnConnectionId} $intType,
-        ${DatabaseParams.columnMethod} $textType,
-        ${DatabaseParams.columnCreatedAt} $intType,
-        ${DatabaseParams.columnUpdatedAt} $intType,
-        FOREIGN KEY(${DatabaseParams.columnConnectionId}) REFERENCES ${DatabaseParams.nwcConnectionsTable}(${DatabaseParams.columnId})
         )
       ''',
     );

@@ -1,4 +1,6 @@
 class NostrConstants {
+  static const String uriProtocol = 'nostr+walletconnect';
+
   // Nostr client message type constants
   static const String clientMessageEventType = 'EVENT';
   static const String clientMessageRequestType = 'REQ';

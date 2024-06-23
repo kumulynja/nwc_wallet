@@ -1,42 +1,21 @@
 import 'package:nwc_wallet/constants/nostr_constants.dart';
 
 enum NwcMethod {
-  payInvoice,
-  multiPayInvoice,
-  payKeysend,
-  multiPayKeysend,
-  makeInvoice,
-  lookupInvoice,
-  listTransactions,
-  getBalance,
-  getInfo,
-}
+  payInvoice(NostrConstants.nwcPayInvoiceMethod),
+  multiPayInvoice(NostrConstants.nwcMultiPayInvoiceMethod),
+  payKeysend(NostrConstants.nwcPayKeysendMethod),
+  multiPayKeysend(NostrConstants.nwcMultiPayKeysendMethod),
+  makeInvoice(NostrConstants.nwcMakeInvoiceMethod),
+  lookupInvoice(NostrConstants.nwcLookupInvoiceMethod),
+  listTransactions(NostrConstants.nwcListTransactionsMethod),
+  getBalance(NostrConstants.nwcGetBalanceMethod),
+  getInfo(NostrConstants.nwcGetInfoMethod);
 
-extension NwcMethodX on NwcMethod {
-  String get plaintext {
-    switch (this) {
-      case NwcMethod.payInvoice:
-        return NostrConstants.nwcPayInvoiceMethod;
-      case NwcMethod.multiPayInvoice:
-        return NostrConstants.nwcMultiPayInvoiceMethod;
-      case NwcMethod.payKeysend:
-        return NostrConstants.nwcPayKeysendMethod;
-      case NwcMethod.multiPayKeysend:
-        return NostrConstants.nwcMultiPayKeysendMethod;
-      case NwcMethod.makeInvoice:
-        return NostrConstants.nwcMakeInvoiceMethod;
-      case NwcMethod.lookupInvoice:
-        return NostrConstants.nwcLookupInvoiceMethod;
-      case NwcMethod.listTransactions:
-        return NostrConstants.nwcListTransactionsMethod;
-      case NwcMethod.getBalance:
-        return NostrConstants.nwcGetBalanceMethod;
-      case NwcMethod.getInfo:
-        return NostrConstants.nwcGetInfoMethod;
-    }
-  }
+  final String plaintext;
 
-  static NwcMethod fromPlaintext(String plaintext) {
+  const NwcMethod(this.plaintext);
+
+  factory NwcMethod.fromPlaintext(String plaintext) {
     switch (plaintext) {
       case NostrConstants.nwcPayInvoiceMethod:
         return NwcMethod.payInvoice;

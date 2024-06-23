@@ -1,10 +1,7 @@
-import 'dart:convert';
-
-import 'package:convert/convert.dart';
-import 'package:crypto/crypto.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/enums/nostr_event_kind_enum.dart';
+import 'package:nwc_wallet/nips/nip01.dart';
 
 @immutable
 class NostrEvent extends Equatable {
@@ -17,13 +14,13 @@ class NostrEvent extends Equatable {
   final String? sig;
 
   const NostrEvent({
-    required this.id,
+    this.id,
     required this.pubkey,
     required this.createdAt,
     required this.kind,
     required this.tags,
     required this.content,
-    required this.sig,
+    this.sig,
   });
 
   factory NostrEvent.fromMap(Map<String, dynamic> map) {
@@ -31,7 +28,7 @@ class NostrEvent extends Equatable {
       id: map['id'],
       pubkey: map['pubkey'],
       createdAt: map['createdAt'],
-      kind: NostrEventKindX.fromValue(map['kind']),
+      kind: NostrEventKind.fromValue(map['kind']),
       tags: List<List<String>>.from(map['tags']),
       content: map['content'],
       sig: map['sig'],
@@ -58,23 +55,13 @@ class NostrEvent extends Equatable {
     );
   }
 
-  String get calculatedId {
-    final event = [
-      0,
-      pubkey.toLowerCase(),
-      createdAt,
-      kind.value,
-      tags,
-      content,
-    ];
-
-    final jsonString = jsonEncode(event);
-    final bytes = utf8.encode(jsonString);
-    final digest = sha256.convert(bytes);
-    final id = hex.encode(digest.bytes);
-
-    return id;
-  }
+  String get calculatedId => Nip01.calculateEventId(
+        pubkey: pubkey,
+        createdAt: createdAt,
+        kind: kind,
+        tags: tags,
+        content: content,
+      );
 
   Map<String, dynamic> toMap() {
     return {

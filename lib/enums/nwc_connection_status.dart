@@ -1,13 +1,15 @@
 enum NwcConnectionStatus {
-  connecting,
-  connected,
-  disconnecting,
-  disconnected,
-}
+  connecting('connecting'),
+  connected('connected'),
+  disconnecting('disconnecting'),
+  disconnected('disconnected');
 
-extension NwcConnectionStatusX on NwcConnectionStatus {
-  static NwcConnectionStatus fromName(String name) {
-    switch (name) {
+  final String value;
+
+  const NwcConnectionStatus(this.value);
+
+  factory NwcConnectionStatus.fromValue(String value) {
+    switch (value) {
       case 'connecting':
         return NwcConnectionStatus.connecting;
       case 'connected':
@@ -17,7 +19,7 @@ extension NwcConnectionStatusX on NwcConnectionStatus {
       case 'disconnected':
         return NwcConnectionStatus.disconnected;
       default:
-        throw Exception('Unknown NWC connection status: $name');
+        throw ArgumentError('Invalid connection status value: $value');
     }
   }
 }

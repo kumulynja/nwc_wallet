@@ -41,6 +41,7 @@ class DatabaseProviderImpl implements DatabaseProvider {
       CREATE TABLE ${DatabaseParams.nwcConnectionsTable} (
         ${DatabaseParams.columnId} $idType,
         ${DatabaseParams.columnName} $textType,
+        ${DatabaseParams.columnConnectionPubkey} $textType,
         ${DatabaseParams.columnRelayUrl} $textType,
         ${DatabaseParams.columnPermittedMethods} $textType,
         ${DatabaseParams.columnSecret} $textType,

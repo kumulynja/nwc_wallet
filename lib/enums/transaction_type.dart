@@ -1,10 +1,12 @@
 enum TransactionType {
-  incoming,
-  outgoing,
-}
+  incoming('incoming'),
+  outgoing('outgoing');
 
-extension TransactionTypeX on TransactionType {
-  static TransactionType fromName(String name) {
+  final String name;
+
+  const TransactionType(this.name);
+
+  factory TransactionType.fromName(String name) {
     switch (name) {
       case 'incoming':
         return TransactionType.incoming;

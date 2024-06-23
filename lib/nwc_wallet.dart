@@ -1,6 +1,7 @@
 library nwc_wallet;
 
 export 'enums/nwc_method_enum.dart' show NwcMethod;
+export 'data/models/nostr_key_pair.dart' show NostrKeyPair;
 
 import 'package:nwc_wallet/data/models/nostr_key_pair.dart';
 import 'package:nwc_wallet/data/models/nwc_request.dart';
@@ -22,6 +23,7 @@ class NwcWallet {
   Stream<NwcRequest> get nwcRequests => _nwcService.nwcRequests;
 
   // Private constructor
+  // Todo: Add default relay
   NwcWallet._(this._relayUrl, this._walletNostrKeyPair) {
     _nwcService = NwcServiceImpl(
       _walletNostrKeyPair,
@@ -50,22 +52,21 @@ class NwcWallet {
     return _instance!;
   }
 
-  Future<String> addConnection(
-    String name,
-    String relayUrl,
-    List<NwcMethod> permittedMethods,
-    int monthlyLimit,
-    int expiry,
-  ) {
+  Future<String> addConnection({
+    required String name,
+    required List<NwcMethod> permittedMethods,
+    int? monthlyLimitSat,
+    int? expiry,
+  }) {
     // Todo: Only if first active connection, connect the _nwcService
     _nwcService.connect();
 
     return _nwcService.addConnection(
-      name,
-      relayUrl,
-      permittedMethods,
-      monthlyLimit,
-      expiry,
+      name: name,
+      relayUrl: _relayUrl,
+      permittedMethods: permittedMethods,
+      monthlyLimitSat: monthlyLimitSat,
+      expiry: expiry,
     );
   }
 

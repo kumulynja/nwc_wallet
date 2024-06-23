@@ -4,14 +4,14 @@ import 'package:nwc_wallet/data/providers/nwc_connection_provider.dart';
 import 'package:nwc_wallet/enums/nwc_method_enum.dart';
 
 abstract class NwcConnectionRepository {
-  Future<int> addConnection(
-    String name,
-    String relayUrl,
-    List<NwcMethod> permittedMethods,
-    String secret,
-    int monthlyLimitSat,
-    int expiry,
-  );
+  Future<int> addConnection({
+    required String name,
+    required String connectionPubkey,
+    required String relayUrl,
+    required List<NwcMethod> permittedMethods,
+    int? monthlyLimitSat,
+    int? expiry,
+  });
   Future<void> updateConnection(
     int id, {
     String? name,
@@ -42,21 +42,21 @@ class NwcConnectionRepositoryImpl implements NwcConnectionRepository {
   NwcConnectionRepositoryImpl(this.connectionProvider);
 
   @override
-  Future<int> addConnection(
-    String name,
-    String relayUrl,
-    List<NwcMethod> permittedMethods,
-    String secret,
-    int monthlyLimitSat,
-    int expiry,
-  ) async {
+  Future<int> addConnection({
+    required String name,
+    required String connectionPubkey,
+    required String relayUrl,
+    required List<NwcMethod> permittedMethods,
+    int? monthlyLimitSat,
+    int? expiry,
+  }) async {
     final creationTime = DateTime.now().millisecondsSinceEpoch;
 
     final connection = NwcConnectionModel(
       name: name,
+      connectionPubkey: connectionPubkey,
       relayUrl: relayUrl,
       permittedMethods: permittedMethods,
-      secret: secret,
       monthlyLimitSat: monthlyLimitSat,
       expiry: expiry,
       createdAt: creationTime,
@@ -71,7 +71,6 @@ class NwcConnectionRepositoryImpl implements NwcConnectionRepository {
     int id, {
     String? name,
     List<NwcMethod>? permittedMethods,
-    String? secret,
     int? monthlyLimitSat,
     int? expiry,
     bool? isDeactivated,
@@ -88,7 +87,6 @@ class NwcConnectionRepositoryImpl implements NwcConnectionRepository {
     final updatedConnection = connection.copyWith(
       name: name,
       permittedMethods: permittedMethods,
-      secret: secret,
       monthlyLimitSat: monthlyLimitSat,
       expiry: expiry,
       isDeactivated: isDeactivated,

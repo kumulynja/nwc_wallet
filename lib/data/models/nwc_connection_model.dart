@@ -8,9 +8,9 @@ import 'package:nwc_wallet/enums/nwc_method_enum.dart';
 class NwcConnectionModel extends Equatable {
   final int? id; // Add an id field for primary key in SQLite
   final String name;
+  final String connectionPubkey;
   final String relayUrl;
   final List<NwcMethod> permittedMethods;
-  final String secret;
   final int? monthlyLimitSat;
   final int? expiry;
   final NwcConnectionStatus connectionStatus;
@@ -22,9 +22,9 @@ class NwcConnectionModel extends Equatable {
   const NwcConnectionModel({
     this.id,
     required this.name,
+    required this.connectionPubkey,
     required this.relayUrl,
     required this.permittedMethods,
-    required this.secret,
     this.monthlyLimitSat,
     this.expiry,
     this.connectionStatus = NwcConnectionStatus.disconnected,
@@ -37,9 +37,9 @@ class NwcConnectionModel extends Equatable {
   NwcConnectionModel copyWith({
     int? id,
     String? name,
+    String? connectionPubkey,
     String? relayUrl,
     List<NwcMethod>? permittedMethods,
-    String? secret,
     int? monthlyLimitSat,
     int? expiry,
     NwcConnectionStatus? connectionStatus,
@@ -51,9 +51,9 @@ class NwcConnectionModel extends Equatable {
     return NwcConnectionModel(
       id: id ?? this.id,
       name: name ?? this.name,
+      connectionPubkey: connectionPubkey ?? this.connectionPubkey,
       relayUrl: relayUrl ?? this.relayUrl,
       permittedMethods: permittedMethods ?? this.permittedMethods,
-      secret: secret ?? this.secret,
       monthlyLimitSat: monthlyLimitSat ?? this.monthlyLimitSat,
       expiry: expiry ?? this.expiry,
       connectionStatus: connectionStatus ?? this.connectionStatus,
@@ -68,12 +68,12 @@ class NwcConnectionModel extends Equatable {
   Map<String, dynamic> toMap() {
     var map = <String, Object?>{
       DatabaseParams.columnName: name,
+      DatabaseParams.columnConnectionPubkey: connectionPubkey,
       DatabaseParams.columnRelayUrl: relayUrl,
       DatabaseParams.columnPermittedMethods: permittedMethods
           .map((m) => m.plaintext)
           .toList()
           .join(','), // Serialize list to comma-separated string
-      DatabaseParams.columnSecret: secret,
       DatabaseParams.columnMonthlyLimitSat: monthlyLimitSat,
       DatabaseParams.columnExpiry: expiry,
       DatabaseParams.columnConnectionStatus: connectionStatus.name,
@@ -96,17 +96,17 @@ class NwcConnectionModel extends Equatable {
     return NwcConnectionModel(
       id: map[DatabaseParams.columnId],
       name: map[DatabaseParams.columnName],
+      connectionPubkey: map[DatabaseParams.columnConnectionPubkey],
       relayUrl: map[DatabaseParams.columnRelayUrl],
       permittedMethods: (map[DatabaseParams.columnPermittedMethods] as String)
           .split(',')
           .map(
-            (method) => NwcMethodX.fromPlaintext(method),
+            (method) => NwcMethod.fromPlaintext(method),
           ) // Deserialize string to list
           .toList(), // Deserialize string to list
-      secret: map[DatabaseParams.columnSecret],
       monthlyLimitSat: map[DatabaseParams.columnMonthlyLimitSat],
       expiry: map[DatabaseParams.columnExpiry],
-      connectionStatus: NwcConnectionStatusX.fromName(
+      connectionStatus: NwcConnectionStatus.fromValue(
         map[DatabaseParams.columnConnectionStatus],
       ),
       isDeactivated: map[DatabaseParams.columnIsDeactivated] == 1,
@@ -121,9 +121,9 @@ class NwcConnectionModel extends Equatable {
     return 'NwcConnectionModel{'
         '${DatabaseParams.columnId}: $id,'
         '${DatabaseParams.columnName}: $name,'
+        '${DatabaseParams.columnConnectionPubkey}: $connectionPubkey,'
         '${DatabaseParams.columnRelayUrl}: $relayUrl,'
         '${DatabaseParams.columnPermittedMethods}: ${permittedMethods.map((m) => m.plaintext).toList()},'
-        '${DatabaseParams.columnSecret}: $secret,'
         '${DatabaseParams.columnMonthlyLimitSat}: $monthlyLimitSat,'
         '${DatabaseParams.columnExpiry}: $expiry,'
         '${DatabaseParams.columnConnectionStatus}: $connectionStatus,'
@@ -137,9 +137,9 @@ class NwcConnectionModel extends Equatable {
   List<Object?> get props => [
         id,
         name,
+        connectionPubkey,
         relayUrl,
         permittedMethods,
-        secret,
         monthlyLimitSat,
         expiry,
         connectionStatus,

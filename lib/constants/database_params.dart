@@ -5,6 +5,7 @@ class DatabaseParams {
   static const String nwcRequestsTable = 'nwc_requests';
   static const String columnId = '_id';
   static const String columnName = 'name';
+  static const String columnConnectionPubkey = 'connectionPubkey';
   static const String columnRelayUrl = 'relayUrl';
   static const String columnPermittedMethods = 'permittedMethods';
   static const String columnSecret = 'secret';

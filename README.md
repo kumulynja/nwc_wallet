@@ -14,6 +14,13 @@ and the Flutter guide for
 TODO: Put a short description of the package here that helps potential users
 know whether this package might be useful for them.
 
+## Inspiration
+
+Other Nostr Flutter packages have been helpful in the development of this package and some code snippets were borrowed from them. Special thanks to the developers of those packages:
+
+- https://github.com/anasfik/nostr
+- https://github.com/bringinxyz/nwc
+
 ## Features
 
 TODO: List what your package can do. Maybe include images, gifs, or videos.

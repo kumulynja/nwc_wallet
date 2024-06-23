@@ -8,6 +8,7 @@ import 'package:nwc_wallet/data/providers/nostr_relay_provider.dart';
 
 abstract class NostrRepository {
   Stream<NostrEvent> get events;
+  Stream<RelayOkMessage> get okMessages;
   void connect();
   void requestEvents(String subscriptionId, List<NostrFilters> filters);
   void publishEvent(NostrEvent event);
@@ -19,11 +20,15 @@ class NostrRepositoryImpl implements NostrRepository {
   final NostrRelayProviderImpl _relayProvider;
   final StreamController<NostrEvent> _eventController =
       StreamController.broadcast();
+  final StreamController<RelayOkMessage> _okMessageController =
+      StreamController.broadcast();
 
   NostrRepositoryImpl(this._relayProvider);
 
   @override
   Stream<NostrEvent> get events => _eventController.stream;
+  @override
+  Stream<RelayOkMessage> get okMessages => _okMessageController.stream;
 
   @override
   void connect() {
@@ -74,6 +79,7 @@ class NostrRepositoryImpl implements NostrRepository {
           'Subscription closed: ${message.subscriptionId} with message: ${message.message}');
     } else if (message is RelayOkMessage) {
       // Handle OK message
+      _okMessageController.add(message);
       print(
           'OK message: Event ${message.eventId} accepted: ${message.accepted}, message: ${message.message}');
     }

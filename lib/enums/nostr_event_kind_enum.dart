@@ -1,24 +1,15 @@
 import 'package:nwc_wallet/constants/nostr_constants.dart';
 
 enum NostrEventKind {
-  nip47InfoEvent,
-  nip47Request,
-  nip47Response,
-}
+  nip47InfoEvent(NostrConstants.nip47InfoEventKind),
+  nip47Request(NostrConstants.nip47RequestKind),
+  nip47Response(NostrConstants.nip47ResponseKind);
 
-extension NostrEventKindX on NostrEventKind {
-  int get value {
-    switch (this) {
-      case NostrEventKind.nip47InfoEvent:
-        return NostrConstants.nip47InfoEventKind;
-      case NostrEventKind.nip47Request:
-        return NostrConstants.nip47RequestKind;
-      case NostrEventKind.nip47Response:
-        return NostrConstants.nip47ResponseKind;
-    }
-  }
+  final int value;
 
-  static NostrEventKind fromValue(int value) {
+  const NostrEventKind(this.value);
+
+  factory NostrEventKind.fromValue(int value) {
     switch (value) {
       case NostrConstants.nip47InfoEventKind:
         return NostrEventKind.nip47InfoEvent;
@@ -27,7 +18,7 @@ extension NostrEventKindX on NostrEventKind {
       case NostrConstants.nip47ResponseKind:
         return NostrEventKind.nip47Response;
       default:
-        throw Exception('Unknown NostrEventKind value: $value');
+        throw ArgumentError('Invalid event kind value: $value');
     }
   }
 }

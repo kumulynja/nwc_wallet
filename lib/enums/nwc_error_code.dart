@@ -1,35 +1,39 @@
-enum NwcErrorCode {
-  rateLimited,
-  notImplemented,
-  insufficientBalance,
-  quotaExceeded,
-  restricted,
-  unauthorized,
-  internal,
-  other,
-}
+import 'package:nwc_wallet/constants/nostr_constants.dart';
 
-extension NwcErrorCodeX on NwcErrorCode {
-  static NwcErrorCode fromValue(String value) {
-    switch (value) {
-      case 'RATE_LIMITED':
+enum NwcErrorCode {
+  rateLimited(NostrConstants.nwcRateLimitedErrorCode),
+  notImplemented(NostrConstants.nwcNotImplementedErrorCode),
+  insufficientBalance(NostrConstants.nwcInsufficientBalanceErrorCode),
+  quotaExceeded(NostrConstants.nwcQuotaExceededErrorCode),
+  restricted(NostrConstants.nwcRestrictedErrorCode),
+  unauthorized(NostrConstants.nwcUnauthorizedErrorCode),
+  internal(NostrConstants.nwcInternalErrorCode),
+  other(NostrConstants.nwcOtherErrorCode);
+
+  final String code;
+
+  const NwcErrorCode(this.code);
+
+  factory NwcErrorCode.fromCode(String code) {
+    switch (code) {
+      case NostrConstants.nwcRateLimitedErrorCode:
         return NwcErrorCode.rateLimited;
-      case 'NOT_IMPLEMENTED':
+      case NostrConstants.nwcNotImplementedErrorCode:
         return NwcErrorCode.notImplemented;
-      case 'INSUFFICIENT_BALANCE':
+      case NostrConstants.nwcInsufficientBalanceErrorCode:
         return NwcErrorCode.insufficientBalance;
-      case 'QUOTA_EXCEEDED':
+      case NostrConstants.nwcQuotaExceededErrorCode:
         return NwcErrorCode.quotaExceeded;
-      case 'RESTRICTED':
+      case NostrConstants.nwcRestrictedErrorCode:
         return NwcErrorCode.restricted;
-      case 'UNAUTHORIZED':
+      case NostrConstants.nwcUnauthorizedErrorCode:
         return NwcErrorCode.unauthorized;
-      case 'INTERNAL':
+      case NostrConstants.nwcInternalErrorCode:
         return NwcErrorCode.internal;
-      case 'OTHER':
+      case NostrConstants.nwcOtherErrorCode:
         return NwcErrorCode.other;
       default:
-        throw Exception('Unknown NWC error code: $value');
+        throw ArgumentError('Invalid error code: $code');
     }
   }
 }

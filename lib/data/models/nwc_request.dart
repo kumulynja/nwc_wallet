@@ -13,7 +13,7 @@ abstract class NwcRequest extends Equatable {
     final method = content['method'] as String;
     final params = content['params'] as Map<String, dynamic>;
 
-    switch (NwcMethodX.fromPlaintext(method)) {
+    switch (NwcMethod.fromPlaintext(method)) {
       case NwcMethod.getInfo:
         return const NwcGetInfoRequest();
       case NwcMethod.getBalance:
@@ -60,7 +60,7 @@ abstract class NwcRequest extends Equatable {
           unpaid: params['unpaid'] as bool,
           type: params['type'] == null
               ? null
-              : TransactionTypeX.fromName(params['type'] as String),
+              : TransactionType.fromName(params['type'] as String),
         );
       default:
         throw ArgumentError('Unknown method: $method');

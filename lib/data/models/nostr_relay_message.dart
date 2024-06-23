@@ -14,7 +14,7 @@ abstract class NostrRelayMessage extends Equatable {
     final message = jsonDecode(serialized);
 
     if (message is List && message.isNotEmpty) {
-      final type = NostrRelayMessageTypeX.fromValue(message[0]);
+      final type = NostrRelayMessageType.fromValue(message[0]);
 
       switch (type) {
         case NostrRelayMessageType.event:

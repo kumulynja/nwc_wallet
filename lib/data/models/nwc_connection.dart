@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/enums/nwc_method_enum.dart';
 
 @immutable
-class NwcConnectionModel extends Equatable {
+class NwcConnection extends Equatable {
   final String name;
   final String connectionPubkey;
   final String relayUrl;
@@ -11,7 +11,7 @@ class NwcConnectionModel extends Equatable {
   final int? monthlyLimitSat;
   final int? expiry;
 
-  const NwcConnectionModel({
+  const NwcConnection({
     required this.name,
     required this.connectionPubkey,
     required this.relayUrl,
@@ -19,24 +19,6 @@ class NwcConnectionModel extends Equatable {
     this.monthlyLimitSat,
     this.expiry,
   });
-
-  NwcConnectionModel copyWith({
-    String? name,
-    String? connectionPubkey,
-    String? relayUrl,
-    List<NwcMethod>? permittedMethods,
-    int? monthlyLimitSat,
-    int? expiry,
-  }) {
-    return NwcConnectionModel(
-      name: name ?? this.name,
-      connectionPubkey: connectionPubkey ?? this.connectionPubkey,
-      relayUrl: relayUrl ?? this.relayUrl,
-      permittedMethods: permittedMethods ?? this.permittedMethods,
-      monthlyLimitSat: monthlyLimitSat ?? this.monthlyLimitSat,
-      expiry: expiry ?? this.expiry,
-    );
-  }
 
   @override
   List<Object?> get props => [

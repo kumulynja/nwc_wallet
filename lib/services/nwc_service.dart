@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/constants/nostr_constants.dart';
 import 'package:nwc_wallet/data/models/nostr_event.dart';
 import 'package:nwc_wallet/data/models/nostr_key_pair.dart';
+import 'package:nwc_wallet/data/models/nwc_connection.dart';
 import 'package:nwc_wallet/data/models/nwc_info_event.dart';
 import 'package:nwc_wallet/data/models/nwc_request.dart';
 import 'package:nwc_wallet/data/repositories/nostr_repository.dart';
@@ -25,15 +26,21 @@ abstract class NwcService {
 }
 
 class NwcServiceImpl implements NwcService {
-  final NostrRepository _nostrRepository;
   final NostrKeyPair _walletNostrKeyPair;
+  final NostrRepository _nostrRepository;
+  final Map<String, NwcConnection> _connections = {};
   final StreamController<NwcRequest> _requestController =
       StreamController.broadcast();
 
   NwcServiceImpl(
     this._walletNostrKeyPair,
     this._nostrRepository,
-  );
+    List<NwcConnection> connections,
+  ) {
+    for (final connection in connections) {
+      _connections[connection.connectionPubkey] = connection;
+    }
+  }
 
   @override
   Stream<NwcRequest> get nwcRequests => _requestController.stream;
@@ -42,6 +49,7 @@ class NwcServiceImpl implements NwcService {
   void connect() {
     _nostrRepository.connect();
     _nostrRepository.events.listen(_handleEvent);
+    // Todo: Subscribe to all existing connections' events
   }
 
   @override
@@ -71,6 +79,17 @@ class NwcServiceImpl implements NwcService {
     }
 
     // Todo: Subscribe to the connection's events
+
+    // Save the connection in memory (user of the package should persist it)
+    final connection = NwcConnection(
+      name: name,
+      connectionPubkey: connectionKeyPair.publicKey,
+      relayUrl: relayUrl,
+      permittedMethods: permittedMethods,
+      monthlyLimitSat: monthlyLimitSat,
+      expiry: expiry,
+    );
+    _connections[connectionKeyPair.publicKey] = connection;
 
     // Return the connection URI so the user can share it with apps to connect
     //  its wallet.

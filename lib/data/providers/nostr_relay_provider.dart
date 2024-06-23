@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/data/models/nostr_client_message.dart';
 import 'package:nwc_wallet/data/models/nostr_relay_message.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -41,6 +42,7 @@ class NostrRelayProviderImpl implements NostrRelayProvider {
   @override
   void sendMessage(NostrClientMessage message) {
     final serializedMessage = message.serialized;
+    debugPrint('Sending message: $serializedMessage');
     _channel?.sink.add(serializedMessage);
   }
 

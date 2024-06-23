@@ -9,6 +9,8 @@ class NostrConstants {
   static const String clientMessageCloseType = 'CLOSE';
 
   // Nostr event kind constants
+  static const int nip01UserMetadataKind = 0;
+  static const int nip01TextNoteKind = 1;
   static const int nip47InfoEventKind = 13194;
   static const int nip47RequestKind = 23194;
   static const int nip47ResponseKind = 23195;

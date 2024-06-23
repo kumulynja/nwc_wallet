@@ -28,7 +28,7 @@ class NwcInfoEvent extends Equatable {
       tags: [
         [
           'a',
-          '${NostrEventKind.nip47InfoEvent}:$connectionPubkey:',
+          '${NostrEventKind.nip47InfoEvent.value}:$connectionPubkey:',
           relayUrl,
         ]
       ],

@@ -18,7 +18,7 @@ class NostrEvent extends Equatable {
     required this.pubkey,
     required this.createdAt,
     required this.kind,
-    required this.tags,
+    this.tags = const [],
     required this.content,
     this.sig,
   });
@@ -27,7 +27,7 @@ class NostrEvent extends Equatable {
     return NostrEvent(
       id: map['id'],
       pubkey: map['pubkey'],
-      createdAt: map['createdAt'],
+      createdAt: map['created_at'],
       kind: NostrEventKind.fromValue(map['kind']),
       tags: List<List<String>>.from(map['tags']),
       content: map['content'],
@@ -67,7 +67,7 @@ class NostrEvent extends Equatable {
     return {
       'id': id,
       'pubkey': pubkey,
-      'createdAt': createdAt,
+      'created_at': createdAt,
       'kind': kind.value,
       'tags': tags,
       'content': content,

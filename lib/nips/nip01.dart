@@ -9,22 +9,22 @@ class Nip01 {
     required String pubkey,
     required int createdAt,
     required NostrEventKind kind,
-    required List<List<String>> tags,
+    required List tags,
     required String content,
   }) {
-    final event = [
+    final data = [
       0,
-      pubkey.toLowerCase(),
+      pubkey,
       createdAt,
       kind.value,
       tags,
       content,
     ];
 
-    final jsonString = jsonEncode(event);
+    final jsonString = jsonEncode(data);
     final bytes = utf8.encode(jsonString);
     final digest = sha256.convert(bytes);
-    final id = hex.encode(digest.bytes).toLowerCase();
+    final id = hex.encode(digest.bytes);
 
     return id;
   }

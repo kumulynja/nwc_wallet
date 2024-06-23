@@ -31,13 +31,29 @@ class NostrKeyPair extends Equatable {
   String get nsec => Nip19.nsecFromHex(privateKey);
   String get npub => Nip19.npubFromHex(publicKey);
 
-  /// Convert bits from one base to another
+  /// Signs a message using the private key and returns the signature.
   /// [message] - The message to sign. Must be 32-bytes hex-encoded (a hash of
   ///   the actual message).
   /// [return] -  The signature as a string of 64 bytes hex-encoded.
   String sign(String message) {
     final aux = _generatePrivateKey();
-    return bip340.sign(privateKey, message, aux);
+
+    final signature = bip340.sign(privateKey, message, aux);
+
+    return signature;
+  }
+
+  /// Verifies a signature for a message using the public key.
+  /// [message] - The message to verify. Must be 32-bytes hex-encoded (a hash of
+  ///  the actual message).
+  /// [signature] - The signature to verify. Must be 64-bytes hex-encoded.
+  /// [return] - True if the signature is valid, false otherwise.
+  /// [throws] - ArgumentError if the signature is not 64 bytes long (128 characters)
+  bool verify(String publicKey, String message, String signature) {
+    if (signature.length != 128) {
+      throw ArgumentError('Signature must be 64 hex characters');
+    }
+    return bip340.verify(publicKey, message, signature);
   }
 
   static String _generatePrivateKey() {

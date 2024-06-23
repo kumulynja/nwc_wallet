@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+import 'package:nwc_wallet/constants/app_configs.dart';
 import 'package:nwc_wallet/data/models/nostr_client_message.dart';
 import 'package:nwc_wallet/data/models/nostr_event.dart';
 import 'package:nwc_wallet/data/models/nostr_filters.dart';
@@ -10,7 +12,7 @@ abstract class NostrRepository {
   Stream<NostrEvent> get events;
   void connect();
   void requestEvents(String subscriptionId, List<NostrFilters> filters);
-  void publishEvent(NostrEvent event);
+  Future<bool> publishEvent(NostrEvent event);
   void closeSubscription(String subscriptionId);
   void disconnect();
 }
@@ -33,8 +35,10 @@ class NostrRepositoryImpl implements NostrRepository {
   }
 
   @override
-  Future<bool> publishEvent(NostrEvent event,
-      {Duration timeout = const Duration(seconds: 10)}) async {
+  Future<bool> publishEvent(
+    NostrEvent event, {
+    int timeoutSec = AppConfigs.defaultPublishEventTimeoutSec,
+  }) async {
     final completer = Completer<bool>();
     final message = ClientEventMessage(event: event);
 
@@ -44,7 +48,8 @@ class NostrRepositoryImpl implements NostrRepository {
 
     final isPublishedSuccessfully = await Future.any([
       completer.future,
-      Future.delayed(timeout, () {
+      Future.delayed(Duration(seconds: timeoutSec), () {
+        debugPrint('Publish event timeout: ${event.id}');
         return false; // Return false on timeout
       }),
     ]);
@@ -75,29 +80,29 @@ class NostrRepositoryImpl implements NostrRepository {
   void _handleRelayMessage(NostrRelayMessage message) {
     if (message is RelayEventMessage) {
       // Handle event message
-      print('Received event: ${message.event.content}');
+      debugPrint('Received event: ${message.event.content}');
 
       // Publish the event to the stream
       _eventController.add(message.event);
     } else if (message is RelayNoticeMessage) {
       // Handle notice message
-      print('Received notice: ${message.message}');
+      debugPrint('Received notice: ${message.message}');
     } else if (message is RelayEndOfStreamMessage) {
       // Handle end of stream message
-      print(
+      debugPrint(
         'End of stored events for subscription: ${message.subscriptionId}',
       );
     } else if (message is RelayClosedMessage) {
       // Handle closed message
-      print(
+      debugPrint(
         'Subscription closed: ${message.subscriptionId} with message: ${message.message}',
       );
     } else if (message is RelayOkMessage) {
-      // Handle OK message
-      print(
+      debugPrint(
         'OK message: Event ${message.eventId} accepted: ${message.accepted}, message: ${message.message}',
       );
 
+      // Handle OK message by completing the completer
       final completer = _publishedEvents[message.eventId];
       if (completer != null) {
         completer.complete(message.accepted);

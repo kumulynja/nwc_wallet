@@ -8,7 +8,6 @@ import 'package:nwc_wallet/data/providers/nostr_relay_provider.dart';
 
 abstract class NostrRepository {
   Stream<NostrEvent> get events;
-  Stream<RelayOkMessage> get okMessages;
   void connect();
   void requestEvents(String subscriptionId, List<NostrFilters> filters);
   void publishEvent(NostrEvent event);
@@ -20,15 +19,12 @@ class NostrRepositoryImpl implements NostrRepository {
   final NostrRelayProviderImpl _relayProvider;
   final StreamController<NostrEvent> _eventController =
       StreamController.broadcast();
-  final StreamController<RelayOkMessage> _okMessageController =
-      StreamController.broadcast();
+  final Map<String, Completer<bool>> _publishedEvents = {};
 
   NostrRepositoryImpl(this._relayProvider);
 
   @override
   Stream<NostrEvent> get events => _eventController.stream;
-  @override
-  Stream<RelayOkMessage> get okMessages => _okMessageController.stream;
 
   @override
   void connect() {
@@ -37,9 +33,25 @@ class NostrRepositoryImpl implements NostrRepository {
   }
 
   @override
-  void publishEvent(NostrEvent event) {
+  Future<bool> publishEvent(NostrEvent event,
+      {Duration timeout = const Duration(seconds: 10)}) async {
+    final completer = Completer<bool>();
     final message = ClientEventMessage(event: event);
+
+    _publishedEvents[event.id!] = completer; // Store completer with event ID
+
     _relayProvider.sendMessage(message);
+
+    final isPublishedSuccessfully = await Future.any([
+      completer.future,
+      Future.delayed(timeout, () {
+        return false; // Return false on timeout
+      }),
+    ]);
+
+    _publishedEvents.remove(event.id);
+
+    return isPublishedSuccessfully;
   }
 
   @override
@@ -72,16 +84,24 @@ class NostrRepositoryImpl implements NostrRepository {
       print('Received notice: ${message.message}');
     } else if (message is RelayEndOfStreamMessage) {
       // Handle end of stream message
-      print('End of stored events for subscription: ${message.subscriptionId}');
+      print(
+        'End of stored events for subscription: ${message.subscriptionId}',
+      );
     } else if (message is RelayClosedMessage) {
       // Handle closed message
       print(
-          'Subscription closed: ${message.subscriptionId} with message: ${message.message}');
+        'Subscription closed: ${message.subscriptionId} with message: ${message.message}',
+      );
     } else if (message is RelayOkMessage) {
       // Handle OK message
-      _okMessageController.add(message);
       print(
-          'OK message: Event ${message.eventId} accepted: ${message.accepted}, message: ${message.message}');
+        'OK message: Event ${message.eventId} accepted: ${message.accepted}, message: ${message.message}',
+      );
+
+      final completer = _publishedEvents[message.eventId];
+      if (completer != null) {
+        completer.complete(message.accepted);
+      }
     }
   }
 }

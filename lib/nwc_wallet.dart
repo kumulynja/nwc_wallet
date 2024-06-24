@@ -77,7 +77,6 @@ class NwcWallet {
   }
 
   void removeConnection(int connectionId) {
-    // Todo: stop the subscription to the connection's events
     // Todo: remove the connection from the _nwcService connections list
 
     // Disconnect the _nwcService if no active connections left

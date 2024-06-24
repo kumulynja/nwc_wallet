@@ -109,6 +109,7 @@ class NwcServiceImpl implements NwcService {
 
   @override
   void disconnect() {
+    // Todo: CLOSE subscription to events
     _nostrRepository.disconnect();
     _requestController.close();
   }

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/constants/nostr_constants.dart';
 import 'package:nwc_wallet/data/models/nostr_event.dart';
+import 'package:nwc_wallet/data/models/nostr_filters.dart';
 import 'package:nwc_wallet/data/models/nostr_key_pair.dart';
 import 'package:nwc_wallet/data/models/nwc_connection.dart';
 import 'package:nwc_wallet/data/models/nwc_info_event.dart';
@@ -11,9 +12,12 @@ import 'package:nwc_wallet/data/models/nwc_request.dart';
 import 'package:nwc_wallet/data/repositories/nostr_repository.dart';
 import 'package:nwc_wallet/enums/nostr_event_kind_enum.dart';
 import 'package:nwc_wallet/enums/nwc_method_enum.dart';
+import 'package:nwc_wallet/nips/nip04.dart';
+import 'package:nwc_wallet/utils/secret_generator.dart';
 
 abstract class NwcService {
   Stream<NwcRequest> get nwcRequests;
+  List<NwcConnection> get connections;
   void connect();
   void disconnect();
   Future<String> addConnection({
@@ -29,6 +33,7 @@ class NwcServiceImpl implements NwcService {
   final NostrKeyPair _walletNostrKeyPair;
   final NostrRepository _nostrRepository;
   final Map<String, NwcConnection> _connections = {};
+  final String _subscriptionId = SecretGenerator.secretHex(64);
   final StreamController<NwcRequest> _requestController =
       StreamController.broadcast();
 
@@ -49,7 +54,14 @@ class NwcServiceImpl implements NwcService {
   void connect() {
     _nostrRepository.connect();
     _nostrRepository.events.listen(_handleEvent);
-    // Todo: Subscribe to all existing connections' events
+    // Request events for the wallet
+    _nostrRepository.requestEvents(_subscriptionId, [
+      NostrFilters.nwcRequests(
+        walletPublicKey: _walletNostrKeyPair.publicKey,
+        since: DateTime.now().millisecondsSinceEpoch ~/
+            1000, // Todo: get last event timestamp if missed events are desired
+      )
+    ]);
   }
 
   @override
@@ -78,23 +90,22 @@ class NwcServiceImpl implements NwcService {
       throw Exception('Failed to publish event');
     }
 
-    // Todo: Subscribe to the connection's events
-
     // Save the connection in memory (user of the package should persist it)
-    final connection = NwcConnection(
+    _connections[connectionKeyPair.publicKey] = NwcConnection(
       name: name,
       connectionPubkey: connectionKeyPair.publicKey,
-      relayUrl: relayUrl,
       permittedMethods: permittedMethods,
       monthlyLimitSat: monthlyLimitSat,
       expiry: expiry,
     );
-    _connections[connectionKeyPair.publicKey] = connection;
 
     // Return the connection URI so the user can share it with apps to connect
     //  its wallet.
     return _buildConnectionUri(connectionKeyPair.privateKey, relayUrl);
   }
+
+  @override
+  List<NwcConnection> get connections => _connections.values.toList();
 
   @override
   void disconnect() {
@@ -116,8 +127,15 @@ class NwcServiceImpl implements NwcService {
     }
 
     try {
-      // Todo: decrypt event content
-      final decryptedContent = ''; // from event.content
+      // Nip47 requests are encrypted with the nip04 standard
+      final decryptedContent = Nip04.decrypt(
+        event.content,
+        _walletNostrKeyPair.privateKey,
+        event.pubkey,
+      );
+
+      debugPrint('Decrypted content: $decryptedContent');
+
       final request =
           NwcRequest.fromDecryptedEventContent(jsonDecode(decryptedContent));
 

@@ -57,7 +57,7 @@ class ClientRequestMessage extends NostrClientMessage {
     final message = [
       NostrClientMessageType.req.value,
       subscriptionId,
-      filters?.map((f) => f.toMap()).toList(),
+      if (filters != null) ...filters!.map((f) => f.toMap()),
     ];
     return jsonEncode(message);
   }

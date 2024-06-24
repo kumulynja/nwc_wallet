@@ -1,10 +1,8 @@
-import 'dart:math';
-
-import 'package:convert/convert.dart';
 import 'package:bip340/bip340.dart' as bip340;
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/nips/nip19.dart';
+import 'package:nwc_wallet/utils/secret_generator.dart';
 
 @immutable
 class NostrKeyPair extends Equatable {
@@ -57,15 +55,9 @@ class NostrKeyPair extends Equatable {
   }
 
   static String _generatePrivateKey() {
-    // A private key for Nostr has to be 64 hex characters,
-    //  64 hex characters are 32 bytes, so generate 32 random bytes.
-    //  A byte is 8 bits, which is 256 possible values to randomnly select from.
-    final secureRandomNumberGenerator = Random.secure();
-    final randomBytes = List<int>.generate(
-      32,
-      (i) => secureRandomNumberGenerator.nextInt(256),
-    );
-    return hex.encode(randomBytes);
+    // A private key for Nostr has to be 64 hex characters.
+    String privateKey = SecretGenerator.secretHex(64);
+    return privateKey;
   }
 
   @override

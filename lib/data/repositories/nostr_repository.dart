@@ -31,7 +31,8 @@ class NostrRepositoryImpl implements NostrRepository {
   @override
   void connect() {
     _relayProvider.connect();
-    _relayProvider.messages.listen(_handleRelayMessage);
+    _relayProvider.messages
+        .listen(_handleRelayMessage); // Todo: Handle errors and other callbacks
   }
 
   @override

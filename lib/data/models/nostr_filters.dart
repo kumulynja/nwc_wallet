@@ -21,16 +21,34 @@ class NostrFilters extends Equatable {
     this.limit,
   });
 
+  factory NostrFilters.nwcRequests({
+    required String walletPublicKey,
+    int? since,
+  }) =>
+      NostrFilters(
+        tags: {
+          'p': [walletPublicKey]
+        },
+        since: since,
+      );
+
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'ids': ids,
-      'authors': authors,
-      'kinds': kinds,
-      'tags': tags,
-      'since': since,
-      'until': until,
-      'limit': limit,
+    final filter = <String, dynamic>{
+      if (ids != null) 'ids': ids,
+      if (authors != null) 'authors': authors,
+      if (kinds != null) 'kinds': kinds,
+      if (since != null) 'since': since,
+      if (until != null) 'until': until,
+      if (limit != null) 'limit': limit,
     };
+
+    if (tags != null) {
+      for (var tag in tags!.entries) {
+        filter['#${tag.key}'] = tag.value;
+      }
+    }
+
+    return filter;
   }
 
   @override

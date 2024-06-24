@@ -3,6 +3,7 @@ library nwc_wallet;
 export 'enums/nwc_method_enum.dart' show NwcMethod;
 export 'data/models/nostr_key_pair.dart' show NostrKeyPair;
 
+import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/constants/app_configs.dart';
 import 'package:nwc_wallet/data/models/nostr_key_pair.dart';
 import 'package:nwc_wallet/data/models/nwc_connection.dart';
@@ -56,21 +57,32 @@ class NwcWallet {
     required List<NwcMethod> permittedMethods,
     int? monthlyLimitSat,
     int? expiry,
-  }) {
-    // Todo: Only if first active connection, connect the _nwcService
-    _nwcService.connect();
+  }) async {
+    // If first active connection, connect the _nwcService
+    if (_nwcService.connections.isEmpty) {
+      _nwcService.connect();
+    }
 
-    return _nwcService.addConnection(
+    final connectionUri = await _nwcService.addConnection(
       name: name,
       relayUrl: _relayUrl,
       permittedMethods: permittedMethods,
       monthlyLimitSat: monthlyLimitSat,
       expiry: expiry,
     );
+
+    debugPrint('Connection URI: $connectionUri');
+
+    return connectionUri;
   }
 
   void removeConnection(int connectionId) {
-    // Todo: if last (active) connection, disconnect the _nwcService
-    _nwcService.disconnect();
+    // Todo: stop the subscription to the connection's events
+    // Todo: remove the connection from the _nwcService connections list
+
+    // Disconnect the _nwcService if no active connections left
+    if (_nwcService.connections.isEmpty) {
+      _nwcService.disconnect();
+    }
   }
 }

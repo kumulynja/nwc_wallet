@@ -16,6 +16,7 @@ dependencies:
   flutter:
     sdk: flutter
   path: ^1.9.0
+  pointycastle: ^3.9.1
   sqflite: ^2.3.3+1
   web_socket_channel: ^3.0.0
 

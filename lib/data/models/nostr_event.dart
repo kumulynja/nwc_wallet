@@ -29,7 +29,17 @@ class NostrEvent extends Equatable {
       pubkey: map['pubkey'],
       createdAt: map['created_at'],
       kind: NostrEventKind.fromValue(map['kind']),
-      tags: List<List<String>>.from(map['tags']),
+      tags: List<List<String>>.from(
+        (map['tags'] as List)
+            .map(
+              (tag) => (tag as List)
+                  .map(
+                    (tagElement) => tagElement.toString(),
+                  )
+                  .toList(),
+            )
+            .toList(),
+      ),
       content: map['content'],
       sig: map['sig'],
     );

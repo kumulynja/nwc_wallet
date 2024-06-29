@@ -1,13 +1,16 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/data/models/tlv_record.dart';
-import 'package:nwc_wallet/enums/nwc_method_enum.dart';
+import 'package:nwc_wallet/enums/nwc_method.dart';
 import 'package:nwc_wallet/enums/transaction_type.dart';
+import 'package:nwc_wallet/nwc_wallet.dart';
 
 // Abstract base class for messages from relay to client
 @immutable
 abstract class NwcRequest extends Equatable {
-  const NwcRequest();
+  final NwcMethod method;
+
+  const NwcRequest(this.method);
 
   factory NwcRequest.fromDecryptedEventContent(Map<String, dynamic> content) {
     final method = content['method'] as String;
@@ -68,25 +71,25 @@ abstract class NwcRequest extends Equatable {
   }
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [method];
 }
 
 // Subclass for requests to get info like supported methods
 @immutable
 class NwcGetInfoRequest extends NwcRequest {
-  const NwcGetInfoRequest();
+  const NwcGetInfoRequest() : super(NwcMethod.getInfo);
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [...super.props];
 }
 
 // Subclass for requests to get balance
 @immutable
 class NwcGetBalanceRequest extends NwcRequest {
-  const NwcGetBalanceRequest();
+  const NwcGetBalanceRequest() : super(NwcMethod.getBalance);
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [...super.props];
 }
 
 // Subclass for requests to make a bolt11 invoice
@@ -102,10 +105,16 @@ class NwcMakeInvoiceRequest extends NwcRequest {
     this.description,
     this.descriptionHash,
     this.expiry,
-  });
+  }) : super(NwcMethod.makeInvoice);
 
   @override
-  List<Object?> get props => [amount, description, descriptionHash, expiry];
+  List<Object?> get props => [
+        ...super.props,
+        amount,
+        description,
+        descriptionHash,
+        expiry,
+      ];
 }
 
 // Subclass for requests to pay a bolt11 invoice
@@ -115,10 +124,10 @@ class NwcPayInvoiceRequest extends NwcRequest {
 
   const NwcPayInvoiceRequest({
     required this.invoice,
-  });
+  }) : super(NwcMethod.payInvoice);
 
   @override
-  List<Object?> get props => [invoice];
+  List<Object?> get props => [...super.props, invoice];
 }
 
 // Subclass for requests to pay multiple bolt11 invoices
@@ -128,24 +137,24 @@ class NwcMultiPayInvoiceRequest extends NwcRequest {
 
   const NwcMultiPayInvoiceRequest({
     required this.invoices,
-  });
+  }) : super(NwcMethod.multiPayInvoice);
 
   @override
-  List<Object?> get props => [invoices];
+  List<Object?> get props => [...super.props, invoices];
 }
 
 @immutable
-class NwcMultiPayInvoiceRequestInvoicesElement extends Equatable {
+class NwcMultiPayInvoiceRequestInvoicesElement extends NwcRequest {
   final String invoice;
   final int amount;
 
   const NwcMultiPayInvoiceRequestInvoicesElement({
     required this.invoice,
     required this.amount,
-  });
+  }) : super(NwcMethod.multiPayInvoice);
 
   @override
-  List<Object?> get props => [invoice, amount];
+  List<Object?> get props => [...super.props, invoice, amount];
 }
 
 // Subclass for requests for a keysend payment
@@ -161,10 +170,11 @@ class NwcPayKeysendRequest extends NwcRequest {
     required this.pubkey,
     this.preimage,
     this.tlvRecords,
-  });
+  }) : super(NwcMethod.payKeysend);
 
   @override
-  List<Object?> get props => [amount, pubkey, preimage, tlvRecords];
+  List<Object?> get props =>
+      [...super.props, amount, pubkey, preimage, tlvRecords];
 }
 
 // Subclass for requests to look up an invoice
@@ -176,10 +186,10 @@ class NwcLookupInvoiceRequest extends NwcRequest {
   const NwcLookupInvoiceRequest({
     this.paymentHash,
     this.invoice,
-  });
+  }) : super(NwcMethod.lookupInvoice);
 
   @override
-  List<Object?> get props => [paymentHash, invoice];
+  List<Object?> get props => [...super.props, paymentHash, invoice];
 }
 
 // Subclass for requests to get a list of transactions
@@ -199,8 +209,9 @@ class NwcListTransactionsRequest extends NwcRequest {
     this.offset,
     this.unpaid = false,
     this.type,
-  });
+  }) : super(NwcMethod.listTransactions);
 
   @override
-  List<Object?> get props => [from, until, limit, offset, unpaid, type];
+  List<Object?> get props =>
+      [...super.props, from, until, limit, offset, unpaid, type];
 }

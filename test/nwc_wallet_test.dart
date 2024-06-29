@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nwc_wallet/constants/app_configs.dart';
-import 'package:nwc_wallet/enums/nostr_event_kind_enum.dart';
+import 'package:nwc_wallet/enums/nostr_event_kind.dart';
 import 'package:nwc_wallet/nips/nip01.dart';
 import 'package:nwc_wallet/nips/nip04.dart';
 
@@ -65,8 +65,6 @@ void main() {
           NwcMethod.payInvoice,
           NwcMethod.payKeysend,
         ],
-        monthlyLimitSat: 1000,
-        expiry: 1000000000,
       );
 
       //await Future.delayed(const Duration(seconds: 1000));

@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/data/models/nostr_event.dart';
-import 'package:nwc_wallet/enums/nostr_event_kind_enum.dart';
-import 'package:nwc_wallet/enums/nwc_method_enum.dart';
+import 'package:nwc_wallet/enums/nostr_event_kind.dart';
+import 'package:nwc_wallet/enums/nwc_method.dart';
 import 'package:nwc_wallet/nwc_wallet.dart';
 
 @immutable

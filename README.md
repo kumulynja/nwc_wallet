@@ -11,20 +11,7 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages).
 -->
 
-This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lightning-wallets/getting-started) side of the [Nostr Wallet Connect (NWC)](https://docs.nwc.dev/) protocol as described by [NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md). It is a Flutter package that can be integrated in any Lightning wallet app to connect the wallet to Nostr Wallet Connect enabled apps.
-
-## Credits
-
-Other Nostr Flutter packages have been helpful in the development of this package and some code snippets were borrowed from them. Special thanks to the developers of those packages:
-
-- https://github.com/anasfik/nostr for the bech32 encoding and decoding code.
-- https://github.com/ethicnology/dart-nostr for the nip04 encryption and decryption code.
-
-## NWC Apps
-
-The Nostr Wallet Connect protocol consists of different parts. Mainly, the wallet service side and the website or app side. They communicate with each other over Nostr relays. This package is aimed to build the wallet service side of the protocol. The website or app side can be built using other Flutter packages, for example:
-
-- https://github.com/bringinxyz/nwc
+This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lightning-wallets/getting-started) side of the [Nostr Wallet Connect (NWC)](https://docs.nwc.dev/) protocol as described by [NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md). It is a Flutter package that can be integrated in any Lightning wallet app to let users connect their wallet to websites and apps.
 
 ## Features
 
@@ -49,3 +36,16 @@ const like = 'sample';
 TODO: Tell users more about the package: where to find more information, how to
 contribute to the package, how to file issues, what response they can expect
 from the package authors, and more.
+
+## Credits
+
+Other Nostr Flutter packages have been helpful in the development of this package and some code snippets were borrowed from them. Special thanks to the developers of these packages:
+
+- https://github.com/anasfik/nostr for the bech32 encoding and decoding code.
+- https://github.com/ethicnology/dart-nostr for the nip04 encryption and decryption code.
+
+## NWC Apps
+
+The Nostr Wallet Connect protocol consists of different parts. Mainly, the wallet service side and the website or app side. They communicate with each other over Nostr relays. This package is aimed to build the wallet service side of the protocol. If your app is not a wallet, but you would like to enable Lightning wallets to connect to your app through Nostr Wallet Connect, you can use the following Flutter package:
+
+- https://github.com/bringinxyz/nwc

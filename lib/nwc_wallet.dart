@@ -1,6 +1,6 @@
 library nwc_wallet;
 
-export 'enums/nwc_method_enum.dart' show NwcMethod;
+export 'enums/nwc_method.dart' show NwcMethod;
 export 'data/models/nostr_key_pair.dart' show NostrKeyPair;
 
 import 'package:flutter/foundation.dart';
@@ -10,7 +10,7 @@ import 'package:nwc_wallet/data/models/nwc_connection.dart';
 import 'package:nwc_wallet/data/models/nwc_request.dart';
 import 'package:nwc_wallet/data/providers/nostr_relay_provider.dart';
 import 'package:nwc_wallet/data/repositories/nostr_repository.dart';
-import 'package:nwc_wallet/enums/nwc_method_enum.dart';
+import 'package:nwc_wallet/enums/nwc_method.dart';
 import 'package:nwc_wallet/services/nwc_service.dart';
 
 class NwcWallet {
@@ -55,8 +55,6 @@ class NwcWallet {
   Future<String> addConnection({
     required String name,
     required List<NwcMethod> permittedMethods,
-    int? monthlyLimitSat,
-    int? expiry,
   }) async {
     // If first active connection, connect the _nwcService
     if (_nwcService.connections.isEmpty) {
@@ -67,8 +65,6 @@ class NwcWallet {
       name: name,
       relayUrl: _relayUrl,
       permittedMethods: permittedMethods,
-      monthlyLimitSat: monthlyLimitSat,
-      expiry: expiry,
     );
 
     debugPrint('Connection URI: $connectionUri');

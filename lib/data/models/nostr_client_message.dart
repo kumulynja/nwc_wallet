@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/data/models/nostr_event.dart';
 import 'package:nwc_wallet/data/models/nostr_filters.dart';
-import 'package:nwc_wallet/enums/nostr_client_message_type_enum.dart';
+import 'package:nwc_wallet/enums/nostr_client_message_type.dart';
 
 // Abstract base class for messages from client to relay
 @immutable

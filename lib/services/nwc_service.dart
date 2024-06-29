@@ -10,8 +10,9 @@ import 'package:nwc_wallet/data/models/nwc_connection.dart';
 import 'package:nwc_wallet/data/models/nwc_info_event.dart';
 import 'package:nwc_wallet/data/models/nwc_request.dart';
 import 'package:nwc_wallet/data/repositories/nostr_repository.dart';
-import 'package:nwc_wallet/enums/nostr_event_kind_enum.dart';
-import 'package:nwc_wallet/enums/nwc_method_enum.dart';
+import 'package:nwc_wallet/enums/nostr_event_kind.dart';
+import 'package:nwc_wallet/enums/nwc_error_code.dart';
+import 'package:nwc_wallet/enums/nwc_method.dart';
 import 'package:nwc_wallet/nips/nip04.dart';
 import 'package:nwc_wallet/utils/secret_generator.dart';
 
@@ -24,8 +25,6 @@ abstract class NwcService {
     required String name,
     required String relayUrl,
     required List<NwcMethod> permittedMethods,
-    int? monthlyLimitSat,
-    int? expiry,
   });
 }
 
@@ -69,8 +68,6 @@ class NwcServiceImpl implements NwcService {
     required String name,
     required String relayUrl,
     required List<NwcMethod> permittedMethods,
-    int? monthlyLimitSat,
-    int? expiry,
   }) async {
     final connectionKeyPair = NostrKeyPair.generate();
 
@@ -95,8 +92,6 @@ class NwcServiceImpl implements NwcService {
       name: name,
       connectionPubkey: connectionKeyPair.publicKey,
       permittedMethods: permittedMethods,
-      monthlyLimitSat: monthlyLimitSat,
-      expiry: expiry,
     );
 
     // Return the connection URI so the user can share it with apps to connect
@@ -123,26 +118,87 @@ class NwcServiceImpl implements NwcService {
 
   void _handleEvent(NostrEvent event) async {
     if (event.kind != NostrEventKind.nip47Request) {
-      // The wallet should only handle NIP-47 requests
+      // The wallet should only process NIP-47 request events
       return;
     }
 
+    for (var tag in event.tags) {
+      if (tag[0] == 'expiration') {
+        final expirationTimestamp = int.tryParse(tag[1]);
+        if (expirationTimestamp != null &&
+            DateTime.now().millisecondsSinceEpoch ~/ 1000 >
+                expirationTimestamp) {
+          return; // Ignore expired requests
+        }
+      }
+    }
+
+    NwcRequest request;
     try {
-      // Nip47 requests are encrypted with the nip04 standard
-      final decryptedContent = Nip04.decrypt(
+      request = _extractRequest(event);
+    } catch (e) {
+      if (e is InternalException) {
+      } else if (e is NotImplementedException) {}
+      return;
+    }
+
+    // Check if the request is for a connection that the wallet has
+    final connection = _connections[event.pubkey];
+    if (connection == null) {
+      // The wallet should only handle requests from connections it has
+      // Todo: send Unauthorized error response, UnauthorizedException('Connection not found');
+      return;
+    }
+
+    // Check if the request is for a method that the connection has
+    if (!connection.permittedMethods.contains(request.method)) {
+      // The wallet should only handle permitted methods
+      // Todo: Send Restricted error response, RestrictedException('Not permitted method');
+      return;
+    }
+
+    _requestController.add(request);
+  }
+
+  NwcRequest _extractRequest(
+    NostrEvent event,
+  ) {
+    String decryptedContent;
+
+    try {
+      // Try to decrypt the content with the nip04 standard
+      decryptedContent = Nip04.decrypt(
         event.content,
         _walletNostrKeyPair.privateKey,
         event.pubkey,
       );
-
       debugPrint('Decrypted content: $decryptedContent');
-
-      final request =
-          NwcRequest.fromDecryptedEventContent(jsonDecode(decryptedContent));
-
-      _requestController.add(request);
     } catch (e) {
-      debugPrint('Error handling event: $e');
+      throw InternalException('Failed to decrypt content: $e');
+    }
+
+    try {
+      return NwcRequest.fromDecryptedEventContent(jsonDecode(decryptedContent));
+    } catch (e) {
+      throw NotImplementedException('Error parsing request: $e');
     }
   }
+}
+
+class InternalException implements Exception {
+  final String message;
+
+  InternalException(this.message);
+
+  @override
+  String toString() => 'InternalException: $message';
+}
+
+class NotImplementedException implements Exception {
+  final String message;
+
+  NotImplementedException(this.message);
+
+  @override
+  String toString() => 'NotImplementedException: $message';
 }

@@ -1,7 +1,12 @@
 library nwc_wallet;
 
 export 'enums/nwc_method.dart' show NwcMethod;
+export 'enums/nwc_error_code.dart' show NwcErrorCode;
+export 'enums/transaction_type.dart' show TransactionType;
+export 'enums/bitcoin_network.dart' show BitcoinNetwork;
 export 'data/models/nostr_key_pair.dart' show NostrKeyPair;
+export 'data/models/transaction.dart' show Transaction;
+export 'data/models/nwc_connection.dart' show NwcConnection;
 
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/constants/app_configs.dart';

@@ -11,18 +11,23 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages).
 -->
 
-This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lightning-wallets/getting-started) side of the [Nostr Wallet Connect (NWC)](https://docs.nwc.dev/) protocol as described by [NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md). It is a Flutter package that can be integrated in any Lightning wallet app to let users connect their wallet to websites, platforms, apps or any NWC-enabled service.
+This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lightning-wallets/getting-started) side of the [Nostr Wallet Connect (NWC)](https://docs.nwc.dev/) protocol as described by [NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md). It is a Flutter package that can be integrated in any Lightning wallet app to let users connect their wallet to websites, platforms, apps or any NWC-enabled services.
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+The package provides the following features without the need to understand anything about Nostr or the NWC protocol:
+
+- Generate or import a Nostr keypair for the wallet service.
+- Create and remove NWC URI's to connect to websites, platforms, apps or any NWC-enabled services.
+- Listen to a stream of NWC requests for your wallet on a specific relay.
+- Respond to NWC requests after handling them in your wallet.
 
 ## Limitations
 
 The package is still in development and should be used with caution. Following are some of the current limitations:
 
 - Only real-time events are supported, the package does not return missed events yet.
-- The package is not yet fully tested or documented.
+- The package is not fully tested or documented.
 - No connection monitoring and reconnect mechanism is implemented yet.
 - No retry mechanisms are currently implemented on failures.
 - No custom exceptions available yet for better error handling.
@@ -32,23 +37,118 @@ Feel free to open any issues if you encounter any other limitations that are not
 
 ## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+To use this package, your app should have a Lightning Network node, wallet or access to a Lightning wallet service so you can handle the NWC requests. You can look at [ldk-node-flutter](https://github.com/LtbLightning/ldk-node-flutter) for a Flutter package that can be used to run a Lightning node on mobile.
+
+## Installation
+
+Add the following to your `pubspec.yaml` file:
+
+```yaml
+dependencies:
+  nwc_wallet_service: ^0.0.1
+```
+
+or use the following command:
+
+```bash
+flutter pub add nwc_wallet
+```
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
-
 ```dart
-const like = 'sample';
+// Generate a new Nostr keypair for the wallet service (do not use the keypair of a user's Nostr profile)
+final nostrKeyPair = NostrKeyPair.generate();
+
+// Initialize the NwcWallet with the generated keypair,
+//  you can optionally pass a relay URL and
+//  a list of active NWC connections saved by your app.
+final nwcWallet = NwcWallet(
+    walletNostrKeyPair: nostrKeyPair,
+);
+
+// Add a new NWC connection
+final connectionUri = await nwcWallet.addConnection(
+    name: 'Test Connection',
+    permittedMethods: [
+        NwcMethod.getInfo,
+        NwcMethod.getBalance,
+        NwcMethod.makeInvoice,
+        NwcMethod.lookupInvoice,
+    ],
+);
+
+// Listen for nwc requests, handle them based on the method type and call the appropriate method after having handled the request with the user's wallet
+nwcWallet.nwcRequests.listen((request) {
+    switch (request.method) {
+        case NwcMethod.getInfo:
+            // Todo: Get the info from the wallet/node or define the wallet's info to share with the website
+            final alias = '';
+            final color = '';
+            final network = BitcoinNetwork.mainnet;
+            final blockHeight = 0;
+            final blockHash = '';
+
+            // Respond to the getInfo request with the wallet's info and the methods your wallet supports
+            nwcWallet.getInfoRequestHandled(
+                request,
+                alias: alias,
+                color: color,
+                pubkey: nostrKeyPair.publicKey,
+                network: <network>,
+                blockHeight: <blockHeight>,
+                blockHash: <blockHash>,
+                methods: [
+                    NwcMethod.getInfo,
+                    NwcMethod.getBalance,
+                    NwcMethod.payInvoice,
+                    NwcMethod.makeInvoice,
+                    NwcMethod.multiPayInvoice,
+                    NwcMethod.payKeysend,
+                    NwcMethod.multiPayKeysend,
+                    NwcMethod.lookupInvoice,
+                    NwcMethod.listTransactions,
+                ],
+            );
+
+        case NwcMethod.getBalance:
+            final balance = 987123; // Todo: get the real balance from the wallet/node
+
+            // Respond to the getBalance request with the wallet's balance
+            nwcWallet.getBalanceRequestHandled(request, balanceSat: balance);
+        case NwcMethod.makeInvoice:
+            // Todo: Fetch a real invoice from the wallet/node in your app
+            const invoice =
+                'lntbs750u1pngrch7dq8w3jhxaqpp56sm3029nrfdjg67rr7tcdcpvtnngq5dz90xxf7h5zq6cp0y6vhyssp529ge5rfqtfryp4dn2gr4qg84rejfus653j3cf975fj9wyyhz2a7q9qyysgqcqp6xqrgegrzjqdcadltawh0z6qmj6ql2qr5t4ndvk5xz0582ag98dgrz9ml37hhjkzyuuqqqdugqqvqqqqqqqqqqqqqqfqef3lceuteux4sv0xarvmtw2sck964s4xwn2wx8d4q4k772v8jn3jtfhf9tjhqge5nhesgt6rvxlkkwvn4f8kwmtx0ghjal72nkv8gsqpc4uyvg';
+
+            // Respond to the makeInvoice request with the invoice details
+            nwcWallet.makeInvoiceRequestHandled(
+                request,
+                invoice: invoice,
+                paymentHash:
+                    'd43717a8b31a5b246bc31f9786e02c5ce68051a22bcc64faf4103580bc9a65c9',
+                amountSat: 75000,
+                feesPaidSat: 0,
+                createdAt: 1719788286,
+                expiresAt: 1719797286,
+                metadata: {},
+            );
+        case NwcMethod.listTransactions:
+            // Todo: Fetch the transactions from the wallet/node in your app
+            final transactions = <NwcTransaction>[];
+
+            // Respond to the listTransactions request with the transactions
+            nwcWallet.listTransactionsRequestHandled(request, transactions: transactions);
+        // Todo: Handle other methods your wallet supports
+        default:
+            print('Unpermitted method: ${request.method}');
+    }
+});
 ```
 
 ## Additional information
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+Contributions are welcome. Feel free to open any issues or pull requests.
 
 ## Credits
 

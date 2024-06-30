@@ -1,5 +1,5 @@
 name: nwc_wallet
-description: "A new Flutter package project."
+description: "The most simple way to integrate Nostr Wallet Connect (NWC) in Bitcoin ⚡ Lightning Network wallets built with Flutter."
 version: 0.0.1
 homepage: https://kumulynja.github.io/nwc_wallet
 

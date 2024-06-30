@@ -32,6 +32,7 @@ class NostrConstants {
   static const String nwcListTransactionsMethod = 'list_transactions';
   static const String nwcGetBalanceMethod = 'get_balance';
   static const String nwcGetInfoMethod = 'get_info';
+  static const String nwcUnknownMethod = 'unknown';
 
   // NWC error code constants
   static const String nwcRateLimitedErrorCode = 'RATE_LIMITED';

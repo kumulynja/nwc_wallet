@@ -1,28 +1,60 @@
+import 'dart:convert';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:nwc_wallet/data/models/nostr_event.dart';
 import 'package:nwc_wallet/data/models/tlv_record.dart';
 import 'package:nwc_wallet/enums/nwc_method.dart';
 import 'package:nwc_wallet/enums/transaction_type.dart';
+import 'package:nwc_wallet/nips/nip04.dart';
 import 'package:nwc_wallet/nwc_wallet.dart';
 
 // Abstract base class for messages from relay to client
 @immutable
 abstract class NwcRequest extends Equatable {
+  final String id;
+  final String connectionPubkey;
   final NwcMethod method;
 
-  const NwcRequest(this.method);
+  const NwcRequest({
+    required this.id,
+    required this.connectionPubkey,
+    required this.method,
+  });
 
-  factory NwcRequest.fromDecryptedEventContent(Map<String, dynamic> content) {
+  factory NwcRequest.fromEvent(
+    NostrEvent event,
+    String contentDecryptionPrivateKey,
+  ) {
+    String connectionPubkey = event.pubkey;
+
+    // Try to decrypt the content with the nip04 standard
+    String decryptedContent = Nip04.decrypt(
+      event.content,
+      contentDecryptionPrivateKey,
+      connectionPubkey,
+    );
+    debugPrint('Decrypted content: $decryptedContent');
+
+    final content = jsonDecode(decryptedContent);
     final method = content['method'] as String;
     final params = content['params'] as Map<String, dynamic>;
 
     switch (NwcMethod.fromPlaintext(method)) {
       case NwcMethod.getInfo:
-        return const NwcGetInfoRequest();
+        return NwcGetInfoRequest(
+          id: event.id!,
+          connectionPubkey: connectionPubkey,
+        );
       case NwcMethod.getBalance:
-        return const NwcGetBalanceRequest();
+        return NwcGetBalanceRequest(
+          id: event.id!,
+          connectionPubkey: connectionPubkey,
+        );
       case NwcMethod.makeInvoice:
         return NwcMakeInvoiceRequest(
+          id: event.id!,
+          connectionPubkey: connectionPubkey,
           amount: params['amount'] as int,
           description: params['description'] as String?,
           descriptionHash: params['descriptionHash'] as String?,
@@ -30,6 +62,8 @@ abstract class NwcRequest extends Equatable {
         );
       case NwcMethod.payInvoice:
         return NwcPayInvoiceRequest(
+          id: event.id!,
+          connectionPubkey: connectionPubkey,
           invoice: params['invoice'] as String,
         );
       case NwcMethod.multiPayInvoice:
@@ -39,9 +73,15 @@ abstract class NwcRequest extends Equatable {
                   amount: e['amount'] as int,
                 ))
             .toList();
-        return NwcMultiPayInvoiceRequest(invoices: invoices);
+        return NwcMultiPayInvoiceRequest(
+          id: event.id!,
+          connectionPubkey: connectionPubkey,
+          invoices: invoices,
+        );
       case NwcMethod.payKeysend:
         return NwcPayKeysendRequest(
+          id: event.id!,
+          connectionPubkey: connectionPubkey,
           amount: params['amount'] as int,
           pubkey: params['pubkey'] as String,
           preimage: params['preimage'] as String?,
@@ -51,11 +91,15 @@ abstract class NwcRequest extends Equatable {
         );
       case NwcMethod.lookupInvoice:
         return NwcLookupInvoiceRequest(
+          id: event.id!,
+          connectionPubkey: connectionPubkey,
           paymentHash: params['paymentHash'] as String?,
           invoice: params['invoice'] as String?,
         );
       case NwcMethod.listTransactions:
         return NwcListTransactionsRequest(
+          id: event.id!,
+          connectionPubkey: connectionPubkey,
           from: params['from'] as int?,
           until: params['until'] as int?,
           limit: params['limit'] as int?,
@@ -63,21 +107,29 @@ abstract class NwcRequest extends Equatable {
           unpaid: params['unpaid'] as bool,
           type: params['type'] == null
               ? null
-              : TransactionType.fromName(params['type'] as String),
+              : TransactionType.fromName(
+                  params['type'] as String,
+                ),
         );
       default:
-        throw ArgumentError('Unknown method: $method');
+        return NwcUnknownRequest(
+          id: event.id!,
+          connectionPubkey: connectionPubkey,
+          unknownMethod: method,
+          params: params,
+        );
     }
   }
 
   @override
-  List<Object?> get props => [method];
+  List<Object?> get props => [id, connectionPubkey, method];
 }
 
 // Subclass for requests to get info like supported methods
 @immutable
 class NwcGetInfoRequest extends NwcRequest {
-  const NwcGetInfoRequest() : super(NwcMethod.getInfo);
+  const NwcGetInfoRequest({required super.id, required super.connectionPubkey})
+      : super(method: NwcMethod.getInfo);
 
   @override
   List<Object?> get props => [...super.props];
@@ -86,7 +138,9 @@ class NwcGetInfoRequest extends NwcRequest {
 // Subclass for requests to get balance
 @immutable
 class NwcGetBalanceRequest extends NwcRequest {
-  const NwcGetBalanceRequest() : super(NwcMethod.getBalance);
+  const NwcGetBalanceRequest(
+      {required super.id, required super.connectionPubkey})
+      : super(method: NwcMethod.getBalance);
 
   @override
   List<Object?> get props => [...super.props];
@@ -105,7 +159,9 @@ class NwcMakeInvoiceRequest extends NwcRequest {
     this.description,
     this.descriptionHash,
     this.expiry,
-  }) : super(NwcMethod.makeInvoice);
+    required super.id,
+    required super.connectionPubkey,
+  }) : super(method: NwcMethod.makeInvoice);
 
   @override
   List<Object?> get props => [
@@ -124,7 +180,9 @@ class NwcPayInvoiceRequest extends NwcRequest {
 
   const NwcPayInvoiceRequest({
     required this.invoice,
-  }) : super(NwcMethod.payInvoice);
+    required super.id,
+    required super.connectionPubkey,
+  }) : super(method: NwcMethod.payInvoice);
 
   @override
   List<Object?> get props => [...super.props, invoice];
@@ -137,24 +195,25 @@ class NwcMultiPayInvoiceRequest extends NwcRequest {
 
   const NwcMultiPayInvoiceRequest({
     required this.invoices,
-  }) : super(NwcMethod.multiPayInvoice);
+    required super.id,
+    required super.connectionPubkey,
+  }) : super(method: NwcMethod.multiPayInvoice);
 
   @override
   List<Object?> get props => [...super.props, invoices];
 }
 
 @immutable
-class NwcMultiPayInvoiceRequestInvoicesElement extends NwcRequest {
+class NwcMultiPayInvoiceRequestInvoicesElement {
   final String invoice;
   final int amount;
 
   const NwcMultiPayInvoiceRequestInvoicesElement({
     required this.invoice,
     required this.amount,
-  }) : super(NwcMethod.multiPayInvoice);
+  });
 
-  @override
-  List<Object?> get props => [...super.props, invoice, amount];
+  List<Object?> get props => [invoice, amount];
 }
 
 // Subclass for requests for a keysend payment
@@ -170,7 +229,9 @@ class NwcPayKeysendRequest extends NwcRequest {
     required this.pubkey,
     this.preimage,
     this.tlvRecords,
-  }) : super(NwcMethod.payKeysend);
+    required super.id,
+    required super.connectionPubkey,
+  }) : super(method: NwcMethod.payKeysend);
 
   @override
   List<Object?> get props =>
@@ -186,7 +247,9 @@ class NwcLookupInvoiceRequest extends NwcRequest {
   const NwcLookupInvoiceRequest({
     this.paymentHash,
     this.invoice,
-  }) : super(NwcMethod.lookupInvoice);
+    required super.id,
+    required super.connectionPubkey,
+  }) : super(method: NwcMethod.lookupInvoice);
 
   @override
   List<Object?> get props => [...super.props, paymentHash, invoice];
@@ -209,9 +272,28 @@ class NwcListTransactionsRequest extends NwcRequest {
     this.offset,
     this.unpaid = false,
     this.type,
-  }) : super(NwcMethod.listTransactions);
+    required super.id,
+    required super.connectionPubkey,
+  }) : super(method: NwcMethod.listTransactions);
 
   @override
   List<Object?> get props =>
       [...super.props, from, until, limit, offset, unpaid, type];
+}
+
+// Subclass for requests with an unkown method
+@immutable
+class NwcUnknownRequest extends NwcRequest {
+  final String unknownMethod;
+  final Map<String, dynamic> params;
+
+  const NwcUnknownRequest({
+    required this.unknownMethod,
+    required this.params,
+    required super.id,
+    required super.connectionPubkey,
+  }) : super(method: NwcMethod.unknown);
+
+  @override
+  List<Object?> get props => [...super.props, unknownMethod, params];
 }

@@ -117,88 +117,59 @@ class NwcServiceImpl implements NwcService {
   }
 
   void _handleEvent(NostrEvent event) async {
-    if (event.kind != NostrEventKind.nip47Request) {
-      // The wallet should only process NIP-47 request events
+    try {
+      if (event.kind != NostrEventKind.nip47Request) {
+        // The wallet should only process NIP-47 request event kinds
+        return;
+      }
+
+      // Check if the request is for a connection that the wallet has
+      final connection = _connections[event.pubkey];
+      if (connection == null) {
+        // The wallet should only handle requests from connections it has
+        // Todo: send Unauthorized error response, UnauthorizedException('Connection not found');
+
+        return;
+      }
+
+      if (_isExpired(event)) return;
+
+      NwcRequest request = NwcRequest.fromEvent(
+        event,
+        _walletNostrKeyPair.privateKey,
+      );
+
+      if (request is NwcUnknownRequest) {
+        // The wallet should only process known requests
+        // Todo: send NotImplemented error response, UnknownException('Unknown request');
+        return;
+      }
+
+      // Check if the request is for a method that the connection has
+      if (!connection.permittedMethods.contains(request.method)) {
+        // The wallet should only handle permitted methods
+        // Todo: Send Restricted error response, RestrictedException('Not permitted method');
+        return;
+      }
+
+      _requestController.add(request);
+    } catch (e) {
+      debugPrint('Error handling event: $e');
       return;
     }
+  }
 
+  bool _isExpired(NostrEvent event) {
     for (var tag in event.tags) {
       if (tag[0] == 'expiration') {
         final expirationTimestamp = int.tryParse(tag[1]);
         if (expirationTimestamp != null &&
             DateTime.now().millisecondsSinceEpoch ~/ 1000 >
                 expirationTimestamp) {
-          return; // Ignore expired requests
+          return true;
         }
       }
     }
-
-    NwcRequest request;
-    try {
-      request = _extractRequest(event);
-    } catch (e) {
-      if (e is InternalException) {
-      } else if (e is NotImplementedException) {}
-      return;
-    }
-
-    // Check if the request is for a connection that the wallet has
-    final connection = _connections[event.pubkey];
-    if (connection == null) {
-      // The wallet should only handle requests from connections it has
-      // Todo: send Unauthorized error response, UnauthorizedException('Connection not found');
-      return;
-    }
-
-    // Check if the request is for a method that the connection has
-    if (!connection.permittedMethods.contains(request.method)) {
-      // The wallet should only handle permitted methods
-      // Todo: Send Restricted error response, RestrictedException('Not permitted method');
-      return;
-    }
-
-    _requestController.add(request);
+    return false;
   }
-
-  NwcRequest _extractRequest(
-    NostrEvent event,
-  ) {
-    String decryptedContent;
-
-    try {
-      // Try to decrypt the content with the nip04 standard
-      decryptedContent = Nip04.decrypt(
-        event.content,
-        _walletNostrKeyPair.privateKey,
-        event.pubkey,
-      );
-      debugPrint('Decrypted content: $decryptedContent');
-    } catch (e) {
-      throw InternalException('Failed to decrypt content: $e');
-    }
-
-    try {
-      return NwcRequest.fromDecryptedEventContent(jsonDecode(decryptedContent));
-    } catch (e) {
-      throw NotImplementedException('Error parsing request: $e');
-    }
-  }
-}
-
-class InternalException implements Exception {
-  final String message;
-
-  InternalException(this.message);
-
-  @override
-  String toString() => 'InternalException: $message';
-}
-
-class NotImplementedException implements Exception {
-  final String message;
-
-  NotImplementedException(this.message);
-
-  @override
-  String toString() => 'NotImplementedException: $message';
 }

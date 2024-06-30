@@ -9,7 +9,8 @@ enum NwcMethod {
   lookupInvoice(NostrConstants.nwcLookupInvoiceMethod),
   listTransactions(NostrConstants.nwcListTransactionsMethod),
   getBalance(NostrConstants.nwcGetBalanceMethod),
-  getInfo(NostrConstants.nwcGetInfoMethod);
+  getInfo(NostrConstants.nwcGetInfoMethod),
+  unknown(NostrConstants.nwcUnknownMethod);
 
   final String plaintext;
 
@@ -36,7 +37,7 @@ enum NwcMethod {
       case NostrConstants.nwcGetInfoMethod:
         return NwcMethod.getInfo;
       default:
-        throw Exception('Unknown NWC method: $plaintext');
+        return NwcMethod.unknown;
     }
   }
 }

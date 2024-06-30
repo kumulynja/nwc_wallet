@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/constants/nostr_constants.dart';
@@ -9,11 +8,11 @@ import 'package:nwc_wallet/data/models/nostr_key_pair.dart';
 import 'package:nwc_wallet/data/models/nwc_connection.dart';
 import 'package:nwc_wallet/data/models/nwc_info_event.dart';
 import 'package:nwc_wallet/data/models/nwc_request.dart';
+import 'package:nwc_wallet/data/models/nwc_response.dart';
 import 'package:nwc_wallet/data/repositories/nostr_repository.dart';
 import 'package:nwc_wallet/enums/nostr_event_kind.dart';
 import 'package:nwc_wallet/enums/nwc_error_code.dart';
 import 'package:nwc_wallet/enums/nwc_method.dart';
-import 'package:nwc_wallet/nips/nip04.dart';
 import 'package:nwc_wallet/utils/secret_generator.dart';
 
 abstract class NwcService {
@@ -73,13 +72,10 @@ class NwcServiceImpl implements NwcService {
 
     // Push permitted methods to relay with get info event
     final nwcInfo = NwcInfoEvent(permittedMethods: permittedMethods);
-    final partialEvent = nwcInfo.toUnsignedNostrEvent(
-      creatorPubkey: _walletNostrKeyPair.publicKey,
+    final signedEvent = nwcInfo.toSignedNostrEvent(
+      creatorKeyPair: _walletNostrKeyPair,
       connectionPubkey: connectionKeyPair.publicKey,
       relayUrl: relayUrl,
-    );
-    final signedEvent = partialEvent.copyWith(
-      sig: _walletNostrKeyPair.sign(partialEvent.id!),
     );
 
     final isPublished = await _nostrRepository.publishEvent(signedEvent);
@@ -123,15 +119,6 @@ class NwcServiceImpl implements NwcService {
         return;
       }
 
-      // Check if the request is for a connection that the wallet has
-      final connection = _connections[event.pubkey];
-      if (connection == null) {
-        // The wallet should only handle requests from connections it has
-        // Todo: send Unauthorized error response, UnauthorizedException('Connection not found');
-
-        return;
-      }
-
       if (_isExpired(event)) return;
 
       NwcRequest request = NwcRequest.fromEvent(
@@ -139,16 +126,13 @@ class NwcServiceImpl implements NwcService {
         _walletNostrKeyPair.privateKey,
       );
 
-      if (request is NwcUnknownRequest) {
-        // The wallet should only process known requests
-        // Todo: send NotImplemented error response, UnknownException('Unknown request');
-        return;
-      }
+      final errorResponse = validateRequest(request);
 
-      // Check if the request is for a method that the connection has
-      if (!connection.permittedMethods.contains(request.method)) {
-        // The wallet should only handle permitted methods
-        // Todo: Send Restricted error response, RestrictedException('Not permitted method');
+      if (errorResponse != null) {
+        await _sendResponseForRequest(
+          response: errorResponse,
+          request: request,
+        );
         return;
       }
 
@@ -171,5 +155,58 @@ class NwcServiceImpl implements NwcService {
       }
     }
     return false;
+  }
+
+  NwcErrorResponse? validateRequest(NwcRequest request) {
+    // 1. First make sure the request is a known request
+    if (request is NwcUnknownRequest) {
+      // NotImplemented error response
+      return NwcResponse.nwcErrorResponse(
+        method: NwcMethod.unknown,
+        error: NwcErrorCode.notImplemented,
+        unknownMethod: request.unknownMethod,
+      ) as NwcErrorResponse;
+    }
+
+    // 2. Check if the known request is coming from a trusted connection
+    final connection = _connections[request.connectionPubkey];
+    if (connection == null) {
+      // Unauthorized error response
+      return NwcResponse.nwcErrorResponse(
+        method: request.method,
+        error: NwcErrorCode.unauthorized,
+      ) as NwcErrorResponse;
+    }
+
+    // 3. Check if the requested method is permitted for the known connection
+    if (!connection.permittedMethods.contains(request.method)) {
+      // Restricted error response
+      return NwcResponse.nwcErrorResponse(
+        method: request.method,
+        error: NwcErrorCode.restricted,
+      ) as NwcErrorResponse;
+    }
+
+    return null; // Request is valid
+  }
+
+  Future<void> _sendResponseForRequest({
+    required NwcResponse response,
+    required NwcRequest request,
+  }) async {
+    final signedResponseEvent = response.toSignedNostrEvent(
+      creatorKeyPair: _walletNostrKeyPair,
+      requestId: request.id,
+      connectionPubkey: request.connectionPubkey,
+    );
+    final isPublished =
+        await _nostrRepository.publishEvent(signedResponseEvent);
+
+    if (!isPublished) {
+      // Todo: use better logging and/or add a retry mechanism
+      debugPrint(
+        'Failed to publish response: $signedResponseEvent for request: $request',
+      );
+    }
   }
 }

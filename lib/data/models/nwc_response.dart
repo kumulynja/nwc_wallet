@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/data/models/nostr_event.dart';
+import 'package:nwc_wallet/data/models/nostr_key_pair.dart';
 import 'package:nwc_wallet/data/models/transaction.dart';
 import 'package:nwc_wallet/enums/bitcoin_network.dart';
 import 'package:nwc_wallet/enums/nostr_event_kind.dart';
@@ -31,12 +32,12 @@ abstract class NwcResponse extends Equatable {
     required int blockHeight,
     required String blockHash,
     required List<NwcMethod> methods,
-    NwcErrorCode? error,
   }) = NwcGetInfoResponse;
+
   factory NwcResponse.nwcGetBalanceResponse({
     required int balanceSat,
-    NwcErrorCode? error,
   }) = NwcGetBalanceResponse;
+
   factory NwcResponse.nwcMakeInvoiceResponse({
     String? invoice,
     String? description,
@@ -48,20 +49,20 @@ abstract class NwcResponse extends Equatable {
     required int createdAt,
     required int expiresAt,
     required Map<dynamic, dynamic> metadata,
-    NwcErrorCode? error,
   }) = NwcMakeInvoiceResponse;
+
   factory NwcResponse.nwcPayInvoiceResponse({
     required String preimage,
-    NwcErrorCode? error,
   }) = NwcPayInvoiceResponse;
+
   factory NwcResponse.nwcMultiPayInvoiceResponse({
     required String preimage,
-    NwcErrorCode? error,
   }) = NwcMultiPayInvoiceResponse;
+
   factory NwcResponse.nwcPayKeysend({
     required String preimage,
-    NwcErrorCode? error,
   }) = NwcPayKeysend;
+
   factory NwcResponse.nwcLookupInvoiceResponse({
     String? invoice,
     String? description,
@@ -74,19 +75,20 @@ abstract class NwcResponse extends Equatable {
     required int expiresAt,
     required int settledAt,
     required Map<dynamic, dynamic> metadata,
-    NwcErrorCode? error,
   }) = NwcLookupInvoiceResponse;
+
   factory NwcResponse.nwcListTransactionsResponse({
     required List<Transaction> transactions,
-    NwcErrorCode? error,
   }) = NwcListTransactionsResponse;
-  factory NwcResponse.nwcUnknownMethodResponse({
-    required String unknownMethod,
-  }) = NwcUnknownMethodResponse;
 
-  NostrEvent toUnsignedNostrEvent({
-    required String contentEncryptionPrivateKey,
-    required String creatorPubkey,
+  factory NwcResponse.nwcErrorResponse({
+    required NwcMethod method,
+    required NwcErrorCode error,
+    String unknownMethod,
+  }) = NwcErrorResponse;
+
+  NostrEvent toSignedNostrEvent({
+    required NostrKeyPair creatorKeyPair,
     required String requestId,
     required String connectionPubkey,
   }) {
@@ -103,11 +105,11 @@ abstract class NwcResponse extends Equatable {
     );
     final encryptedContent = Nip04.encrypt(
       content,
-      contentEncryptionPrivateKey,
+      creatorKeyPair.privateKey,
       connectionPubkey,
     );
     final partialNostrEvent = NostrEvent(
-      pubkey: creatorPubkey,
+      pubkey: creatorKeyPair.publicKey,
       createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       kind: NostrEventKind.nip47Response,
       tags: [
@@ -117,11 +119,13 @@ abstract class NwcResponse extends Equatable {
       content: encryptedContent,
     );
 
-    final unsignedNostrEvent = partialNostrEvent.copyWith(
-      id: partialNostrEvent.calculatedId,
+    final id = partialNostrEvent.calculatedId;
+    final signedNostrEvent = partialNostrEvent.copyWith(
+      id: id,
+      sig: creatorKeyPair.sign(id),
     );
 
-    return unsignedNostrEvent;
+    return signedNostrEvent;
   }
 
   @override
@@ -147,7 +151,6 @@ class NwcGetInfoResponse extends NwcResponse {
     required this.blockHeight,
     required this.blockHash,
     required this.methods,
-    super.error,
   }) : super(
           resultType: NwcMethod.getInfo.plaintext,
           result: {
@@ -181,7 +184,6 @@ class NwcGetBalanceResponse extends NwcResponse {
 
   NwcGetBalanceResponse({
     required this.balanceSat,
-    super.error,
   }) : super(resultType: NwcMethod.getBalance.plaintext, result: {
           'balance': balanceSat * 1000, // user's balance in msats
         });
@@ -215,7 +217,6 @@ class NwcMakeInvoiceResponse extends NwcResponse {
     required this.createdAt,
     this.expiresAt,
     required this.metadata,
-    super.error,
   }) : super(
           resultType: NwcMethod.makeInvoice.plaintext,
           result: {
@@ -255,7 +256,6 @@ class NwcPayInvoiceResponse extends NwcResponse {
 
   NwcPayInvoiceResponse({
     required this.preimage,
-    super.error,
   }) : super(
           resultType: NwcMethod.payInvoice.plaintext,
           result: {
@@ -273,7 +273,6 @@ class NwcMultiPayInvoiceResponse extends NwcResponse {
 
   NwcMultiPayInvoiceResponse({
     required this.preimage,
-    super.error,
   }) : super(
           resultType: NwcMethod.multiPayInvoice.plaintext,
           result: {
@@ -291,7 +290,6 @@ class NwcPayKeysend extends NwcResponse {
 
   NwcPayKeysend({
     required this.preimage,
-    super.error,
   }) : super(
           resultType: NwcMethod.payKeysend.plaintext,
           result: {
@@ -329,7 +327,6 @@ class NwcLookupInvoiceResponse extends NwcResponse {
     this.expiresAt,
     this.settledAt,
     required this.metadata,
-    super.error,
   }) : super(
           resultType: NwcMethod.lookupInvoice.plaintext,
           result: {
@@ -371,7 +368,6 @@ class NwcListTransactionsResponse extends NwcResponse {
 
   NwcListTransactionsResponse({
     required this.transactions,
-    super.error,
   }) : super(
           resultType: NwcMethod.listTransactions.plaintext,
           result: {
@@ -409,13 +405,16 @@ class NwcListTransactionsResponse extends NwcResponse {
 }
 
 @immutable
-class NwcUnknownMethodResponse extends NwcResponse {
+class NwcErrorResponse extends NwcResponse {
   final String unknownMethod;
 
-  NwcUnknownMethodResponse({
-    required this.unknownMethod,
+  NwcErrorResponse({
+    required NwcMethod method,
+    required NwcErrorCode error,
+    this.unknownMethod = '',
   }) : super(
-          resultType: NwcMethod.unknown.plaintext,
+          resultType:
+              method == NwcMethod.unknown ? unknownMethod : method.plaintext,
           error: NwcErrorCode.notImplemented,
         );
 

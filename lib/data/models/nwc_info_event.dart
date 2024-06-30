@@ -1,10 +1,7 @@
-import 'dart:convert';
-
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/data/models/nostr_event.dart';
 import 'package:nwc_wallet/enums/nostr_event_kind.dart';
-import 'package:nwc_wallet/enums/nwc_method.dart';
 import 'package:nwc_wallet/nwc_wallet.dart';
 
 @immutable
@@ -15,13 +12,13 @@ class NwcInfoEvent extends Equatable {
     required this.permittedMethods,
   });
 
-  NostrEvent toUnsignedNostrEvent({
-    required String creatorPubkey,
+  NostrEvent toSignedNostrEvent({
+    required NostrKeyPair creatorKeyPair,
     required String connectionPubkey,
     required String relayUrl,
   }) {
     final partialNostrEvent = NostrEvent(
-      pubkey: creatorPubkey,
+      pubkey: creatorKeyPair.publicKey,
       createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       kind: NostrEventKind.nip47InfoEvent,
       // The info event should be a replaceable event, so add 'a' tag.
@@ -41,11 +38,13 @@ class NwcInfoEvent extends Equatable {
           ), // NIP-47 spec: The content should be a plaintext string with the supported commands, space-separated.
     );
 
-    final unsignedNostrEvent = partialNostrEvent.copyWith(
-      id: partialNostrEvent.calculatedId,
+    final id = partialNostrEvent.calculatedId;
+    final signedNostrEvent = partialNostrEvent.copyWith(
+      id: id,
+      sig: creatorKeyPair.sign(id),
     );
 
-    return unsignedNostrEvent;
+    return signedNostrEvent;
   }
 
   @override

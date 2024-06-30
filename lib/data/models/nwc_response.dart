@@ -56,12 +56,18 @@ abstract class NwcResponse extends Equatable {
   }) = NwcPayInvoiceResponse;
 
   factory NwcResponse.nwcMultiPayInvoiceResponse({
+    required String id,
     required String preimage,
   }) = NwcMultiPayInvoiceResponse;
 
   factory NwcResponse.nwcPayKeysendResponse({
     required String preimage,
   }) = NwcPayKeysendResponse;
+
+  factory NwcResponse.nwcMultiPayKeysendResponse({
+    required String id,
+    required String preimage,
+  }) = NwcMultiPayKeysendResponse;
 
   factory NwcResponse.nwcLookupInvoiceResponse({
     String? invoice,
@@ -108,21 +114,29 @@ abstract class NwcResponse extends Equatable {
       creatorKeyPair.privateKey,
       connectionPubkey,
     );
+
+    final multiPayId = this is NwcMultiPayInvoiceResponse
+        ? (this as NwcMultiPayInvoiceResponse).id
+        : this is NwcMultiPayKeysendResponse
+            ? (this as NwcMultiPayKeysendResponse).id
+            : null;
+
     final partialNostrEvent = NostrEvent(
       pubkey: creatorKeyPair.publicKey,
       createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       kind: NostrEventKind.nip47Response,
       tags: [
         ['e', requestId],
-        ['p', connectionPubkey]
+        ['p', connectionPubkey],
+        if (multiPayId != null) ['d', multiPayId],
       ],
       content: encryptedContent,
     );
 
-    final id = partialNostrEvent.calculatedId;
+    final eventId = partialNostrEvent.calculatedId;
     final signedNostrEvent = partialNostrEvent.copyWith(
-      id: id,
-      sig: creatorKeyPair.sign(id),
+      id: eventId,
+      sig: creatorKeyPair.sign(eventId),
     );
 
     return signedNostrEvent;
@@ -269,9 +283,11 @@ class NwcPayInvoiceResponse extends NwcResponse {
 
 @immutable
 class NwcMultiPayInvoiceResponse extends NwcResponse {
+  final String id;
   final String preimage;
 
   NwcMultiPayInvoiceResponse({
+    required this.id,
     required this.preimage,
   }) : super(
           resultType: NwcMethod.multiPayInvoice.plaintext,
@@ -281,7 +297,7 @@ class NwcMultiPayInvoiceResponse extends NwcResponse {
         );
 
   @override
-  List<Object?> get props => [...super.props, preimage];
+  List<Object?> get props => [...super.props, id, preimage];
 }
 
 @immutable
@@ -299,6 +315,25 @@ class NwcPayKeysendResponse extends NwcResponse {
 
   @override
   List<Object?> get props => [...super.props, preimage];
+}
+
+@immutable
+class NwcMultiPayKeysendResponse extends NwcResponse {
+  final String id;
+  final String preimage;
+
+  NwcMultiPayKeysendResponse({
+    required this.id,
+    required this.preimage,
+  }) : super(
+          resultType: NwcMethod.multiPayKeysend.plaintext,
+          result: {
+            'preimage': preimage,
+          },
+        );
+
+  @override
+  List<Object?> get props => [...super.props, id, preimage];
 }
 
 @immutable

@@ -38,7 +38,7 @@ abstract class NwcRequest extends Equatable {
 
     final content = jsonDecode(decryptedContent);
     final method = content['method'] as String;
-    final params = content['params'] as Map<String, dynamic>;
+    final params = content['params'] as Map<String, dynamic>? ?? {};
 
     switch (NwcMethod.fromPlaintext(method)) {
       case NwcMethod.getInfo:
@@ -69,6 +69,7 @@ abstract class NwcRequest extends Equatable {
       case NwcMethod.multiPayInvoice:
         final invoices = (params['invoices'] as List)
             .map((e) => NwcMultiPayInvoiceRequestInvoicesElement(
+                  id: e['id'] as String?,
                   invoice: e['invoice'] as String,
                   amount: e['amount'] as int,
                 ))
@@ -88,6 +89,23 @@ abstract class NwcRequest extends Equatable {
           tlvRecords: (params['tlvRecords'] as List)
               .map((e) => TlvRecord.fromMap(e as Map<String, dynamic>))
               .toList(),
+        );
+      case NwcMethod.multiPayKeysend:
+        final keysends = (params['keysends'] as List)
+            .map((e) => NwcMultiPayKeysendRequestInvoicesElement(
+                  id: e['id'] as String?,
+                  pubkey: e['pubkey'] as String,
+                  amount: e['amount'] as int,
+                  preimage: e['preimage'] as String?,
+                  tlvRecords: (e['tlvRecords'] as List)
+                      .map((e) => TlvRecord.fromMap(e as Map<String, dynamic>))
+                      .toList(),
+                ))
+            .toList();
+        return NwcMultiPayKeysendRequest(
+          id: event.id!,
+          connectionPubkey: connectionPubkey,
+          keysends: keysends,
         );
       case NwcMethod.lookupInvoice:
         return NwcLookupInvoiceRequest(
@@ -205,15 +223,17 @@ class NwcMultiPayInvoiceRequest extends NwcRequest {
 
 @immutable
 class NwcMultiPayInvoiceRequestInvoicesElement {
+  final String? id;
   final String invoice;
   final int amount;
 
   const NwcMultiPayInvoiceRequestInvoicesElement({
+    this.id,
     required this.invoice,
     required this.amount,
   });
 
-  List<Object?> get props => [invoice, amount];
+  List<Object?> get props => [id, invoice, amount];
 }
 
 // Subclass for requests for a keysend payment
@@ -236,6 +256,40 @@ class NwcPayKeysendRequest extends NwcRequest {
   @override
   List<Object?> get props =>
       [...super.props, amount, pubkey, preimage, tlvRecords];
+}
+
+// Subclass for requests to pay multiple keysend payments
+@immutable
+class NwcMultiPayKeysendRequest extends NwcRequest {
+  final List<NwcMultiPayKeysendRequestInvoicesElement> keysends;
+
+  const NwcMultiPayKeysendRequest({
+    required this.keysends,
+    required super.id,
+    required super.connectionPubkey,
+  }) : super(method: NwcMethod.multiPayKeysend);
+
+  @override
+  List<Object?> get props => [...super.props, keysends];
+}
+
+@immutable
+class NwcMultiPayKeysendRequestInvoicesElement {
+  final String? id;
+  final String pubkey;
+  final int amount;
+  final String? preimage;
+  final List<TlvRecord>? tlvRecords;
+
+  const NwcMultiPayKeysendRequestInvoicesElement({
+    this.id,
+    required this.pubkey,
+    required this.amount,
+    this.preimage,
+    this.tlvRecords,
+  });
+
+  List<Object?> get props => [id, pubkey, amount, preimage, tlvRecords];
 }
 
 // Subclass for requests to look up an invoice

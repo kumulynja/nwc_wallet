@@ -158,11 +158,13 @@ class NwcWallet {
 
   Future<void> multiPayInvoiceRequestHandled(
     NwcRequest request, {
-    required List<String> preimages,
+    required Map<String, String> preimageById,
   }) async {
-    for (var preimage in preimages) {
-      final response =
-          NwcResponse.nwcMultiPayInvoiceResponse(preimage: preimage);
+    for (var entry in preimageById.entries) {
+      final response = NwcResponse.nwcMultiPayInvoiceResponse(
+        preimage: entry.value,
+        id: entry.key,
+      );
 
       await _nwcService.handleResponse(request: request, response: response);
     }
@@ -175,6 +177,20 @@ class NwcWallet {
     final response = NwcResponse.nwcPayKeysendResponse(preimage: preimage);
 
     await _nwcService.handleResponse(request: request, response: response);
+  }
+
+  Future<void> multiPayKeysendRequestHandled(
+    NwcRequest request, {
+    required Map<String, String> preimageById,
+  }) async {
+    for (var entry in preimageById.entries) {
+      final response = NwcResponse.nwcMultiPayKeysendResponse(
+        preimage: entry.value,
+        id: entry.key,
+      );
+
+      await _nwcService.handleResponse(request: request, response: response);
+    }
   }
 
   Future<void> lookupInvoiceRequestHandled(

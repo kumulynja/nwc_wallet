@@ -11,7 +11,7 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages).
 -->
 
-This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lightning-wallets/getting-started) side of the [Nostr Wallet Connect (NWC)](https://docs.nwc.dev/) protocol as described by [NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md). It is a Flutter package that can be integrated in any Lightning wallet app to let users connect their wallet to websites and apps.
+This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lightning-wallets/getting-started) side of the [Nostr Wallet Connect (NWC)](https://docs.nwc.dev/) protocol as described by [NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md). It is a Flutter package that can be integrated in any Lightning wallet app to let users connect their wallet to websites, platforms, apps or any NWC-enabled service.
 
 ## Features
 
@@ -59,7 +59,7 @@ Other Nostr Flutter packages have been helpful in the development of this packag
 
 Also the [Nostr Wallet Connect workshop](https://www.youtube.com/watch?v=V-7u7bJccSM) of [Plebdevs](https://www.plebdevs.com/) as instructed by [gudnuf](https://x.com/da_goodenough) was very helpful in understanding the NWC protocol.
 
-Also a special shootout to the amazing people at [Flash](https://paywithflash.com/), who are building the first Bitcoin payment gateway on top of Nostr Wallet Connect. Thanks to them I could see the great potential of the NWC protocol and decided to build this package.
+Also a special shootout to the amazing people at [Flash](https://paywithflash.com/), who are building the first Bitcoin payment gateway on top of Nostr Wallet Connect. They showed me the great potential of the NWC protocol and their work has been a motivation for me to build this package.
 
 ## NWC Apps
 

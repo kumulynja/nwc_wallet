@@ -17,6 +17,19 @@ This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lig
 
 TODO: List what your package can do. Maybe include images, gifs, or videos.
 
+## Limitations
+
+The package is still in development and should be used with caution. Following are some of the current limitations:
+
+- Only real-time events are supported, the package does not return missed events yet.
+- The package is not yet fully tested or documented.
+- No connection monitoring and reconnect mechanism is implemented yet.
+- No retry mechanisms are currently implemented on failures.
+- No custom exceptions available yet for better error handling.
+
+All of these limitations will of course be addressed in future releases.
+Feel free to open any issues if you encounter any other limitations that are not listed here.
+
 ## Getting started
 
 TODO: List prerequisites and provide or point to information on how to
@@ -43,6 +56,10 @@ Other Nostr Flutter packages have been helpful in the development of this packag
 
 - https://github.com/anasfik/nostr for the bech32 encoding and decoding code.
 - https://github.com/ethicnology/dart-nostr for the nip04 encryption and decryption code.
+
+Also the [Nostr Wallet Connect workshop](https://www.youtube.com/watch?v=V-7u7bJccSM) of [Plebdevs](https://www.plebdevs.com/) as instructed by [gudnuf](https://x.com/da_goodenough) was very helpful in understanding the NWC protocol.
+
+Also a special shootout to the amazing people at [Flash](https://paywithflash.com/), who are building the first Bitcoin payment gateway on top of Nostr Wallet Connect. Thanks to them I could see the great potential of the NWC protocol and decided to build this package.
 
 ## NWC Apps
 

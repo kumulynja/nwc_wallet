@@ -16,15 +16,20 @@ import 'package:nwc_wallet/enums/nwc_method.dart';
 import 'package:nwc_wallet/utils/secret_generator.dart';
 
 abstract class NwcService {
-  Stream<NwcRequest> get nwcRequests;
   List<NwcConnection> get connections;
+  Stream<NwcRequest> get nwcRequests;
   void connect();
-  void disconnect();
   Future<String> addConnection({
     required String name,
     required String relayUrl,
     required List<NwcMethod> permittedMethods,
   });
+  void removeConnection(String pubkey);
+  Future<void> handleResponse({
+    required NwcResponse response,
+    required NwcRequest request,
+  });
+  Future<void> disconnect();
 }
 
 class NwcServiceImpl implements NwcService {
@@ -41,9 +46,12 @@ class NwcServiceImpl implements NwcService {
     List<NwcConnection> connections,
   ) {
     for (final connection in connections) {
-      _connections[connection.connectionPubkey] = connection;
+      _connections[connection.pubkey] = connection;
     }
   }
+
+  @override
+  List<NwcConnection> get connections => _connections.values.toList();
 
   @override
   Stream<NwcRequest> get nwcRequests => _requestController.stream;
@@ -86,7 +94,7 @@ class NwcServiceImpl implements NwcService {
     // Save the connection in memory (user of the package should persist it)
     _connections[connectionKeyPair.publicKey] = NwcConnection(
       name: name,
-      connectionPubkey: connectionKeyPair.publicKey,
+      pubkey: connectionKeyPair.publicKey,
       permittedMethods: permittedMethods,
     );
 
@@ -96,11 +104,25 @@ class NwcServiceImpl implements NwcService {
   }
 
   @override
-  List<NwcConnection> get connections => _connections.values.toList();
+  void removeConnection(String pubkey) {
+    _connections.remove(pubkey);
+  }
 
   @override
-  void disconnect() {
-    // Todo: CLOSE subscription to events
+  Future<void> handleResponse({
+    required NwcResponse response,
+    required NwcRequest request,
+  }) async {
+    await _sendResponseForRequest(response: response, request: request);
+  }
+
+  @override
+  Future<void> disconnect() async {
+    final isSubscriptionClosed =
+        await _nostrRepository.closeSubscription(_subscriptionId);
+    if (!isSubscriptionClosed) {
+      throw Exception('Failed to close subscription');
+    }
     _nostrRepository.disconnect();
     _requestController.close();
   }
@@ -207,6 +229,7 @@ class NwcServiceImpl implements NwcService {
       debugPrint(
         'Failed to publish response: $signedResponseEvent for request: $request',
       );
+      throw Exception('Failed to publish response');
     }
   }
 }

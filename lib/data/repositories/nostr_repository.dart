@@ -13,7 +13,7 @@ abstract class NostrRepository {
   void connect();
   void requestEvents(String subscriptionId, List<NostrFilters> filters);
   Future<bool> publishEvent(NostrEvent event);
-  void closeSubscription(String subscriptionId);
+  Future<bool> closeSubscription(String subscriptionId);
   void disconnect();
 }
 
@@ -21,7 +21,10 @@ class NostrRepositoryImpl implements NostrRepository {
   final NostrRelayProviderImpl _relayProvider;
   final StreamController<NostrEvent> _eventController =
       StreamController.broadcast();
-  final Map<String, Completer<bool>> _publishedEvents = {};
+  final Map<String, Completer<bool>> _requestingEvents =
+      {}; // Todo: Implement completion with EOSE
+  final Map<String, Completer<bool>> _publishingEvents = {};
+  final Map<String, Completer<bool>> _closingSubscriptions = {};
 
   NostrRepositoryImpl(this._relayProvider);
 
@@ -43,7 +46,7 @@ class NostrRepositoryImpl implements NostrRepository {
     final completer = Completer<bool>();
     final message = ClientEventMessage(event: event);
 
-    _publishedEvents[event.id!] = completer; // Store completer with event ID
+    _publishingEvents[event.id!] = completer; // Store completer with event ID
 
     _relayProvider.sendMessage(message);
 
@@ -55,7 +58,7 @@ class NostrRepositoryImpl implements NostrRepository {
       }),
     ]);
 
-    _publishedEvents.remove(event.id);
+    _publishingEvents.remove(event.id);
 
     return isPublishedSuccessfully;
   }
@@ -68,9 +71,29 @@ class NostrRepositoryImpl implements NostrRepository {
   }
 
   @override
-  void closeSubscription(String subscriptionId) {
+  Future<bool> closeSubscription(String subscriptionId) async {
+    final completer = Completer<bool>();
     final message = ClientCloseMessage(subscriptionId: subscriptionId);
+
+    _closingSubscriptions[subscriptionId] =
+        completer; // Store completer with subscription ID
+
     _relayProvider.sendMessage(message);
+
+    final isClosedSuccessfully = await Future.any([
+      completer.future,
+      Future.delayed(
+          const Duration(
+            seconds: AppConfigs.defaultCloseSubscriptionTimeoutSec,
+          ), () {
+        debugPrint('Close subscription timeout: $subscriptionId');
+        return false; // Return false on timeout
+      }),
+    ]);
+
+    _closingSubscriptions.remove(subscriptionId);
+
+    return isClosedSuccessfully;
   }
 
   @override
@@ -94,17 +117,22 @@ class NostrRepositoryImpl implements NostrRepository {
         'End of stored events for subscription: ${message.subscriptionId}',
       );
     } else if (message is RelayClosedMessage) {
-      // Handle closed message
       debugPrint(
         'Subscription closed: ${message.subscriptionId} with message: ${message.message}',
       );
+
+      // Handle closed message by completing the completer
+      final completer = _closingSubscriptions[message.subscriptionId];
+      if (completer != null) {
+        completer.complete(true);
+      }
     } else if (message is RelayOkMessage) {
       debugPrint(
         'OK message: Event ${message.eventId} accepted: ${message.accepted}, message: ${message.message}',
       );
 
       // Handle OK message by completing the completer
-      final completer = _publishedEvents[message.eventId];
+      final completer = _publishingEvents[message.eventId];
       if (completer != null) {
         completer.complete(message.accepted);
       }

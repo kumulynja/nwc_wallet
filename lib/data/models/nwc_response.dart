@@ -59,9 +59,9 @@ abstract class NwcResponse extends Equatable {
     required String preimage,
   }) = NwcMultiPayInvoiceResponse;
 
-  factory NwcResponse.nwcPayKeysend({
+  factory NwcResponse.nwcPayKeysendResponse({
     required String preimage,
-  }) = NwcPayKeysend;
+  }) = NwcPayKeysendResponse;
 
   factory NwcResponse.nwcLookupInvoiceResponse({
     String? invoice,
@@ -285,10 +285,10 @@ class NwcMultiPayInvoiceResponse extends NwcResponse {
 }
 
 @immutable
-class NwcPayKeysend extends NwcResponse {
+class NwcPayKeysendResponse extends NwcResponse {
   final String preimage;
 
-  NwcPayKeysend({
+  NwcPayKeysendResponse({
     required this.preimage,
   }) : super(
           resultType: NwcMethod.payKeysend.plaintext,

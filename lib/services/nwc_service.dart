@@ -19,7 +19,7 @@ abstract class NwcService {
   List<NwcConnection> get connections;
   Stream<NwcRequest> get nwcRequests;
   void connect();
-  Future<String> addConnection({
+  Future<NwcConnection> addConnection({
     required String name,
     required String relayUrl,
     required List<NwcMethod> permittedMethods,
@@ -71,7 +71,7 @@ class NwcServiceImpl implements NwcService {
   }
 
   @override
-  Future<String> addConnection({
+  Future<NwcConnection> addConnection({
     required String name,
     required String relayUrl,
     required List<NwcMethod> permittedMethods,
@@ -91,16 +91,18 @@ class NwcServiceImpl implements NwcService {
       throw Exception('Failed to publish event');
     }
 
-    // Save the connection in memory (user of the package should persist it)
-    _connections[connectionKeyPair.publicKey] = NwcConnection(
+    // Build the connection with URI so the user can share it with apps to connect
+    //  its wallet.
+    final connection = NwcConnection(
       name: name,
       pubkey: connectionKeyPair.publicKey,
       permittedMethods: permittedMethods,
+      uri: _buildConnectionUri(connectionKeyPair.privateKey, relayUrl),
     );
+    // Save the connection in memory (user of the package should persist it)
+    _connections[connectionKeyPair.publicKey] = connection;
 
-    // Return the connection URI so the user can share it with apps to connect
-    //  its wallet.
-    return _buildConnectionUri(connectionKeyPair.privateKey, relayUrl);
+    return connection;
   }
 
   @override

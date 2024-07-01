@@ -38,6 +38,8 @@ class NostrConstants {
   static const String nwcRateLimitedErrorCode = 'RATE_LIMITED';
   static const String nwcNotImplementedErrorCode = 'NOT_IMPLEMENTED';
   static const String nwcInsufficientBalanceErrorCode = 'INSUFFICIENT_BALANCE';
+  static const String nwcPaymentFailedErrorCode = 'PAYMENT_FAILED';
+  static const String nwcNotFoundErrorCode = 'NOT_FOUND';
   static const String nwcQuotaExceededErrorCode = 'QUOTA_EXCEEDED';
   static const String nwcRestrictedErrorCode = 'RESTRICTED';
   static const String nwcUnauthorizedErrorCode = 'UNAUTHORIZED';

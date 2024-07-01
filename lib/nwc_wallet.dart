@@ -61,7 +61,7 @@ class NwcWallet {
     return _instance!;
   }
 
-  Future<String> addConnection({
+  Future<NwcConnection> addConnection({
     required String name,
     required List<NwcMethod> permittedMethods,
   }) async {
@@ -70,15 +70,15 @@ class NwcWallet {
       _nwcService.connect();
     }
 
-    final connectionUri = await _nwcService.addConnection(
+    final connection = await _nwcService.addConnection(
       name: name,
       relayUrl: _relayUrl,
       permittedMethods: permittedMethods,
     );
 
-    debugPrint('Connection URI: $connectionUri');
+    debugPrint('Connection URI: ${connection.uri}');
 
-    return connectionUri;
+    return connection;
   }
 
   Future<void> removeConnection(String pubkey) async {

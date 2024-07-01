@@ -7,11 +7,13 @@ class NwcConnection extends Equatable {
   final String name;
   final String pubkey;
   final List<NwcMethod> permittedMethods;
+  final String? uri;
 
   const NwcConnection({
     required this.name,
     required this.pubkey,
     required this.permittedMethods,
+    this.uri,
   });
 
   @override
@@ -19,5 +21,6 @@ class NwcConnection extends Equatable {
         name,
         pubkey,
         permittedMethods,
+        uri,
       ];
 }

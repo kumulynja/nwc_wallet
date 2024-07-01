@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nwc_wallet/constants/app_configs.dart';
-import 'package:nwc_wallet/enums/bitcoin_network.dart';
 import 'package:nwc_wallet/enums/nostr_event_kind.dart';
 import 'package:nwc_wallet/nips/nip01.dart';
 import 'package:nwc_wallet/nips/nip04.dart';
@@ -53,7 +52,7 @@ void main() {
         walletNostrKeyPair: nostrKeyPair,
       );
 
-      final connectionUri = await nwcWallet.addConnection(
+      final connection = await nwcWallet.addConnection(
         name: 'Test Connection',
         permittedMethods: [
           NwcMethod.getInfo,
@@ -133,10 +132,10 @@ void main() {
       sub.cancel();
 
       expect(
-        connectionUri,
+        connection.uri,
         startsWith('nostr+walletconnect://${nostrKeyPair.publicKey}?secret='),
       );
-      expect(connectionUri, endsWith('&relay=${AppConfigs.defaultRelayUrl}'));
+      expect(connection.uri, endsWith('&relay=${AppConfigs.defaultRelayUrl}'));
     },
   );
 

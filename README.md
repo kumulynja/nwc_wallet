@@ -39,26 +39,18 @@ Feel free to open any issues if you encounter any other limitations that are not
 
 To use this package, your app should have a Lightning Network node, wallet or access to a Lightning wallet service so you can handle the NWC requests. You can look at [ldk-node-flutter](https://github.com/LtbLightning/ldk-node-flutter) for a Flutter package that can be used to run a Lightning node on mobile.
 
-## Installation
+Also install any secure storage mechanism package you want to use to persist the wallet service's Nostr private key and created NWC connections.
+To keep this package independent of any specific secure storage mechanism or dependency, the package does not persist keypairs or connections between app restarts, that's up to the user of the package to implement.
 
-Add the following to your `pubspec.yaml` file:
-
-```yaml
-dependencies:
-  nwc_wallet_service: ^0.0.1
-```
-
-or use the following command:
-
-```bash
-flutter pub add nwc_wallet
-```
+Together with the NWC connection data, it is recommended to also save limits and an expiry date for the connection. You should than check these limits and expiry date before handling the NWC requests.
 
 ## Usage
 
 ```dart
 // Generate a new Nostr keypair for the wallet service (do not use the keypair of a user's Nostr profile)
 final nostrKeyPair = NostrKeyPair.generate();
+
+// Todo: Save the keypair in your app's secure storage
 
 // Initialize the NwcWallet with the generated keypair,
 //  you can optionally pass a relay URL and
@@ -68,7 +60,7 @@ final nwcWallet = NwcWallet(
 );
 
 // Add a new NWC connection
-final connectionUri = await nwcWallet.addConnection(
+final connection = await nwcWallet.addConnection(
     name: 'Test Connection',
     permittedMethods: [
         NwcMethod.getInfo,
@@ -77,6 +69,9 @@ final connectionUri = await nwcWallet.addConnection(
         NwcMethod.lookupInvoice,
     ],
 );
+
+println('Connection added: ${connection.uri}');
+// Todo: Securely store the connection info in your app
 
 // Listen for nwc requests, handle them based on the method type and call the appropriate method after having handled the request with the user's wallet
 nwcWallet.nwcRequests.listen((request) {
@@ -139,11 +134,35 @@ nwcWallet.nwcRequests.listen((request) {
 
             // Respond to the listTransactions request with the transactions
             nwcWallet.listTransactionsRequestHandled(request, transactions: transactions);
+        case NwcMethod.payInvoice:
+            // Todo: Check the budget limits and expiry date of the connection before making the payment!!!
+
+            // Todo: Pay the invoice with the wallet/node in your app and get the preimage
+            final preimage = <preimage>;
+
+            // Respond to the payInvoice request with the preimage
+            nwcWallet.payInvoiceRequestHandled(request, preimage: preimage);
         // Todo: Handle other methods your wallet supports
         default:
             print('Unpermitted method: ${request.method}');
     }
 });
+```
+
+If a request can not be handled, you should use the `failedToHandleRequest` method to inform the website or app that the request could not be handled, instead of the specific request handled method:
+
+```dart
+try {
+    // Try paying the invoice with the wallet/node in your app
+    final preimage = <preimage>;
+
+    // If no exception is thrown, respond to the payInvoice request with the preimage
+    nwcWallet.payInvoiceRequestHandled(request, preimage: preimage);
+} catch(e) {
+    // If an exception is thrown, inform the website or app that the request could not be handled
+    // instead of the specific request handled method and provide the nwc error code that fits best.
+    nwcWallet.failedToHandleRequest(request, error: NwcError.paymentFailed);
+}
 ```
 
 ## Additional information
@@ -166,3 +185,7 @@ Also a special shootout to the amazing people at [Flash](https://paywithflash.co
 The Nostr Wallet Connect protocol consists of different parts. Mainly, the wallet service side and the website or app side. They communicate with each other over Nostr relays. This package is aimed to build the wallet service side of the protocol. If your app is not a wallet, but you would like to enable Lightning wallets to connect to your app through Nostr Wallet Connect, you can use the following Flutter package:
 
 - https://github.com/bringinxyz/nwc
+
+```
+
+```

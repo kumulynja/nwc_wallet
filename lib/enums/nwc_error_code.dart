@@ -13,6 +13,14 @@ enum NwcErrorCode {
     NostrConstants.nwcInsufficientBalanceErrorCode,
     'The wallet does not have enough funds to cover a fee reserve or the payment amount.',
   ),
+  paymentFailed(
+    NostrConstants.nwcPaymentFailedErrorCode,
+    'The payment failed. This may be due to a timeout, exhausting all routes, insufficient capacity or similar.',
+  ),
+  notFound(
+    NostrConstants.nwcNotFoundErrorCode,
+    'The invoice could not be found by the given parameters.',
+  ),
   quotaExceeded(
     NostrConstants.nwcQuotaExceededErrorCode,
     'The wallet has exceeded its spending quota.',
@@ -44,6 +52,10 @@ enum NwcErrorCode {
         return NwcErrorCode.notImplemented;
       case NostrConstants.nwcInsufficientBalanceErrorCode:
         return NwcErrorCode.insufficientBalance;
+      case NostrConstants.nwcPaymentFailedErrorCode:
+        return NwcErrorCode.paymentFailed;
+      case NostrConstants.nwcNotFoundErrorCode:
+        return NwcErrorCode.notFound;
       case NostrConstants.nwcQuotaExceededErrorCode:
         return NwcErrorCode.quotaExceeded;
       case NostrConstants.nwcRestrictedErrorCode:

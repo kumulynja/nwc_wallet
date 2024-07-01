@@ -47,7 +47,8 @@ Together with the NWC connection data, it is recommended to also save limits and
 ## Usage
 
 ```dart
-// Generate a new Nostr keypair for the wallet service (do not use the keypair of a user's Nostr profile)
+// Generate a new Nostr keypair for the wallet service
+//  (do not use the keypair of a user's Nostr profile)
 final nostrKeyPair = NostrKeyPair.generate();
 
 // Todo: Save the keypair in your app's secure storage
@@ -59,21 +60,8 @@ final nwcWallet = NwcWallet(
     walletNostrKeyPair: nostrKeyPair,
 );
 
-// Add a new NWC connection
-final connection = await nwcWallet.addConnection(
-    name: 'Test Connection',
-    permittedMethods: [
-        NwcMethod.getInfo,
-        NwcMethod.getBalance,
-        NwcMethod.makeInvoice,
-        NwcMethod.lookupInvoice,
-    ],
-);
-
-println('Connection added: ${connection.uri}');
-// Todo: Securely store the connection info in your app
-
-// Listen for nwc requests, handle them based on the method type and call the appropriate method after having handled the request with the user's wallet
+// Listen for nwc requests, handle them based on the method type and
+//  call the appropriate method after the request has been handled through the user's wallet
 nwcWallet.nwcRequests.listen((request) {
     switch (request.method) {
         case NwcMethod.getInfo:
@@ -163,6 +151,26 @@ try {
     // instead of the specific request handled method and provide the nwc error code that fits best.
     nwcWallet.failedToHandleRequest(request, error: NwcError.paymentFailed);
 }
+```
+
+To create a new NWC connection, you can use the `addConnection` method:
+
+```dart
+// Add a new NWC connection
+final connection = await nwcWallet.addConnection(
+    name: 'Test Connection',
+    permittedMethods: [
+        NwcMethod.getInfo,
+        NwcMethod.getBalance,
+        NwcMethod.makeInvoice,
+        NwcMethod.lookupInvoice,
+    ],
+);
+
+// Todo: Securely store the connection info in your app
+//  (optionally, but highly recommended) together with budget limits and an expiry date
+
+println('Connection added: ${connection.uri}');
 ```
 
 ## Additional information

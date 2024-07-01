@@ -149,7 +149,7 @@ nwcWallet.nwcRequests.listen((request) {
 });
 ```
 
-If a request can not be handled, you should use the `failedToHandleRequest` method to inform the website or app that the request could not be handled, instead of the specific request handled method:
+If a request can not be handled, you should use the `failedToHandleRequest` method to inform the website or app, instead of the specific request handled method:
 
 ```dart
 try {

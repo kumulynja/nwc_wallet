@@ -11,7 +11,7 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages).
 -->
 
-This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lightning-wallets/getting-started) side of the [Nostr Wallet Connect (NWC)](https://docs.nwc.dev/) protocol as described by [NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md). It is a Flutter package that can be integrated in any Lightning wallet app to let users connect their wallet to websites, platforms, apps or any NWC-enabled services.
+This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lightning-wallets/getting-started) side of the [Nostr Wallet Connect (NWC)](https://docs.nwc.dev/) protocol as described by [NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md). It is a Flutter package that can be integrated into any Lightning wallet app to let its users connect their wallet to websites, platforms, apps or any NWC-enabled services.
 
 ## Features
 
@@ -42,7 +42,7 @@ To use this package, your app should have a Lightning Network node, wallet or ac
 Also install any secure storage mechanism package you want to use to persist the wallet service's Nostr private key and created NWC connections.
 To keep this package independent of any specific secure storage mechanism or dependency, the package does not persist keypairs or connections between app restarts, that's up to the user of the package to implement.
 
-Together with the NWC connection data, it is recommended to also save limits and an expiry date for the connection. You should than check these limits and expiry date before handling the NWC requests.
+Together with the NWC connection data, it is recommended to also save limits and an expiry date for the connection. You should then check these limits and expiry date before handling the NWC requests.
 
 ## Usage
 

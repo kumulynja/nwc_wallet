@@ -263,6 +263,7 @@ All basic functionality of the NWC protocol is implemented and working in this p
 
 - [ ] Missed events handling
 - [ ] Connection monitoring
+- [ ] Updating permitted methods of a connection
 - [ ] Status checks
 - [ ] Custom exceptions
 - [ ] More tests

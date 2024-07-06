@@ -21,7 +21,6 @@ abstract class NwcService {
   Stream<NwcRequest> get nwcRequests;
   Future<void> connect();
   Future<NwcConnection> addConnection({
-    required String name,
     required String relayUrl,
     required List<NwcMethod> permittedMethods,
   });
@@ -66,7 +65,7 @@ class NwcServiceImpl implements NwcService {
     try {
       await _nostrRepository.connect();
       // Start listening to NWC requests for the wallet
-      _subscription = await _subscribeToNwcRequests();
+      await _subscribeToNwcRequests();
 
       // Was able to subscribe to requests, so reset the retry count
       _retryCount = 0;
@@ -79,7 +78,6 @@ class NwcServiceImpl implements NwcService {
 
   @override
   Future<NwcConnection> addConnection({
-    required String name,
     required String relayUrl,
     required List<NwcMethod> permittedMethods,
   }) async {
@@ -101,7 +99,6 @@ class NwcServiceImpl implements NwcService {
     // Build the connection with URI so the user can share it with apps to connect
     //  its wallet.
     final connection = NwcConnection(
-      name: name,
       pubkey: connectionKeyPair.publicKey,
       permittedMethods: permittedMethods,
       uri: _buildConnectionUri(connectionKeyPair.privateKey, relayUrl),
@@ -149,9 +146,9 @@ class NwcServiceImpl implements NwcService {
     await _nostrRepository.dispose();
   }
 
-  Future<StreamSubscription> _subscribeToNwcRequests() async {
+  Future<void> _subscribeToNwcRequests() async {
     // Listen to events from the nostr relay
-    final subscription = _nostrRepository.events.listen(
+    _subscription = _nostrRepository.events.listen(
       _handleEvent,
       onError: (error) async {
         await disconnect();
@@ -164,7 +161,6 @@ class NwcServiceImpl implements NwcService {
     );
 
     // Request nwc events for the wallet
-    _subscribeToNwcRequests();
     _nostrRepository.requestEvents(
       _subscriptionId,
       [
@@ -175,8 +171,6 @@ class NwcServiceImpl implements NwcService {
         )
       ],
     );
-
-    return subscription;
   }
 
   Future<void> _scheduleReconnect() async {

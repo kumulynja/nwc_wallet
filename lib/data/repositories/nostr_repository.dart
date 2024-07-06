@@ -60,7 +60,7 @@ class NostrRepositoryImpl implements NostrRepository {
 
     _relayProvider.sendMessage(message);
 
-    final isPublishedSuccessfully = completer.future.timeout(
+    final isPublishedSuccessfully = await completer.future.timeout(
       Duration(seconds: timeoutSec),
       onTimeout: () {
         debugPrint('Publish event timeout: ${event.id}');
@@ -91,7 +91,7 @@ class NostrRepositoryImpl implements NostrRepository {
 
     _relayProvider.sendMessage(message);
 
-    final isClosedSuccessfully = completer.future.timeout(
+    final isClosedSuccessfully = await completer.future.timeout(
       const Duration(seconds: AppConfigs.defaultCloseSubscriptionTimeoutSec),
       onTimeout: () {
         debugPrint('Close subscription timeout: $subscriptionId');

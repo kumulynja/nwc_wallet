@@ -62,7 +62,6 @@ class NwcWallet {
   }
 
   Future<NwcConnection> addConnection({
-    required String name,
     required List<NwcMethod> permittedMethods,
   }) async {
     // If first active connection, connect the _nwcService
@@ -71,7 +70,6 @@ class NwcWallet {
     }
 
     final connection = await _nwcService.addConnection(
-      name: name,
       relayUrl: _relayUrl,
       permittedMethods: permittedMethods,
     );
@@ -91,7 +89,7 @@ class NwcWallet {
   }
 
   Future<void> getInfoRequestHandled(
-    NwcRequest request, {
+    NwcGetInfoRequest request, {
     required String alias,
     required String color,
     required String pubkey,
@@ -115,7 +113,7 @@ class NwcWallet {
   }
 
   Future<void> getBalanceRequestHandled(
-    NwcRequest request, {
+    NwcGetBalanceRequest request, {
     required int balanceSat,
   }) async {
     final response = NwcResponse.nwcGetBalanceResponse(balanceSat: balanceSat);
@@ -124,7 +122,7 @@ class NwcWallet {
   }
 
   Future<void> makeInvoiceRequestHandled(
-    NwcRequest request, {
+    NwcMakeInvoiceRequest request, {
     String? invoice,
     String? description,
     String? descriptionHash,
@@ -153,7 +151,7 @@ class NwcWallet {
   }
 
   Future<void> payInvoiceRequestHandled(
-    NwcRequest request, {
+    NwcPayInvoiceRequest request, {
     required String preimage,
   }) async {
     final response = NwcResponse.nwcPayInvoiceResponse(preimage: preimage);
@@ -162,7 +160,7 @@ class NwcWallet {
   }
 
   Future<void> multiPayInvoiceRequestHandled(
-    NwcRequest request, {
+    NwcMultiPayInvoiceRequest request, {
     required Map<String, String> preimageById,
   }) async {
     for (var entry in preimageById.entries) {
@@ -176,7 +174,7 @@ class NwcWallet {
   }
 
   Future<void> payKeysendRequestHandled(
-    NwcRequest request, {
+    NwcPayKeysendRequest request, {
     required String preimage,
   }) async {
     final response = NwcResponse.nwcPayKeysendResponse(preimage: preimage);
@@ -185,7 +183,7 @@ class NwcWallet {
   }
 
   Future<void> multiPayKeysendRequestHandled(
-    NwcRequest request, {
+    NwcMultiPayKeysendRequest request, {
     required Map<String, String> preimageById,
   }) async {
     for (var entry in preimageById.entries) {
@@ -199,7 +197,7 @@ class NwcWallet {
   }
 
   Future<void> lookupInvoiceRequestHandled(
-    NwcRequest request, {
+    NwcLookupInvoiceRequest request, {
     String? invoice,
     String? description,
     String? descriptionHash,
@@ -230,7 +228,7 @@ class NwcWallet {
   }
 
   Future<void> listTransactionsRequestHandled(
-    NwcRequest request, {
+    NwcListTransactionsRequest request, {
     required List<Transaction> transactions,
   }) async {
     final response =

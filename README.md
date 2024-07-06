@@ -66,7 +66,7 @@ dependencies:
 
 ## Usage
 
-Next, you can follow the steps below to integrate the package into your app:
+Next, you can follow the steps below to integrate Nostr Wallet Connect into your app:
 
 ### 1. Generate or import a Nostr keypair for the wallet service\*
 
@@ -274,7 +274,7 @@ And if you feel like contributing, pull requests are very welcome as well.
 
 ## Credits
 
-Other Nostr Flutter packages have been helpful in the development of this package and some code snippets were borrowed from them. Special thanks to the developers of these packages:
+Other Nostr Flutter packages have been helpful in the development of this package and some code snippets were borrowed from them. A big thanks to the developers of these packages:
 
 - https://github.com/anasfik/nostr for the bech32 encoding and decoding code.
 - https://github.com/ethicnology/dart-nostr for the nip04 encryption and decryption code.

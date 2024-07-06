@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/constants/nostr_constants.dart';
@@ -18,7 +19,7 @@ import 'package:nwc_wallet/utils/secret_generator.dart';
 abstract class NwcService {
   List<NwcConnection> get connections;
   Stream<NwcRequest> get nwcRequests;
-  void connect();
+  Future<void> connect();
   Future<NwcConnection> addConnection({
     required String name,
     required String relayUrl,
@@ -30,11 +31,15 @@ abstract class NwcService {
     required NwcRequest request,
   });
   Future<void> disconnect();
+  Future<void> dispose();
 }
 
 class NwcServiceImpl implements NwcService {
   final NostrKeyPair _walletNostrKeyPair;
   final NostrRepository _nostrRepository;
+  StreamSubscription? _subscription;
+  Timer? _reconnectTimer;
+  int _retryCount = 0;
   final Map<String, NwcConnection> _connections = {};
   final String _subscriptionId = SecretGenerator.secretHex(64);
   final StreamController<NwcRequest> _requestController =
@@ -57,17 +62,19 @@ class NwcServiceImpl implements NwcService {
   Stream<NwcRequest> get nwcRequests => _requestController.stream;
 
   @override
-  void connect() {
-    _nostrRepository.connect();
-    _nostrRepository.events.listen(_handleEvent);
-    // Request events for the wallet
-    _nostrRepository.requestEvents(_subscriptionId, [
-      NostrFilters.nwcRequests(
-        walletPublicKey: _walletNostrKeyPair.publicKey,
-        since: DateTime.now().millisecondsSinceEpoch ~/
-            1000, // Todo: get last event timestamp if missed events are desired
-      )
-    ]);
+  Future<void> connect({int retrySeconds = 1}) async {
+    try {
+      await _nostrRepository.connect();
+      // Start listening to NWC requests for the wallet
+      _subscription = await _subscribeToNwcRequests();
+
+      // Was able to subscribe to requests, so reset the retry count
+      _retryCount = 0;
+    } catch (e) {
+      debugPrint('Error connecting: $e');
+      await disconnect();
+      await _scheduleReconnect();
+    }
   }
 
   @override
@@ -120,13 +127,71 @@ class NwcServiceImpl implements NwcService {
 
   @override
   Future<void> disconnect() async {
-    final isSubscriptionClosed =
+    // Cancel the reconnect timer if it's running to avoid reconnecting
+    _reconnectTimer?.cancel();
+    // Close the subscription on the relay
+    final isNostrSubscriptionClosed =
         await _nostrRepository.closeSubscription(_subscriptionId);
-    if (!isSubscriptionClosed) {
+    if (!isNostrSubscriptionClosed) {
       throw Exception('Failed to close subscription');
     }
-    _nostrRepository.disconnect();
-    _requestController.close();
+    // Stop listening to events
+    await _subscription?.cancel();
+    _subscription = null;
+    // Disconnect from the relay
+    await _nostrRepository.disconnect();
+  }
+
+  @override
+  Future<void> dispose() async {
+    await _requestController.close();
+    await disconnect();
+    await _nostrRepository.dispose();
+  }
+
+  Future<StreamSubscription> _subscribeToNwcRequests() async {
+    // Listen to events from the nostr relay
+    final subscription = _nostrRepository.events.listen(
+      _handleEvent,
+      onError: (error) async {
+        await disconnect();
+        await _scheduleReconnect();
+      },
+      onDone: () async {
+        await disconnect();
+        await _scheduleReconnect();
+      },
+    );
+
+    // Request nwc events for the wallet
+    _subscribeToNwcRequests();
+    _nostrRepository.requestEvents(
+      _subscriptionId,
+      [
+        NostrFilters.nwcRequests(
+          walletPublicKey: _walletNostrKeyPair.publicKey,
+          since: DateTime.now().millisecondsSinceEpoch ~/
+              1000, // Todo: get last event timestamp if missed events are desired, this should be a parameter
+        )
+      ],
+    );
+
+    return subscription;
+  }
+
+  Future<void> _scheduleReconnect() async {
+    // Exponential backoff strategy with min 1 second and max 64 seconds
+    final delay = Duration(seconds: pow(2, _retryCount).toInt());
+    _retryCount = min(_retryCount + 1, 6);
+
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(
+      delay,
+      () async {
+        // Call the connect function again
+        await connect();
+      },
+    );
   }
 
   String _buildConnectionUri(String secret, String relayUrl) {

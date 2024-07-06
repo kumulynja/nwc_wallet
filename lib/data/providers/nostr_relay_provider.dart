@@ -8,34 +8,40 @@ import 'package:web_socket_channel/status.dart' as status;
 
 abstract class NostrRelayProvider {
   Stream<NostrRelayMessage> get messages;
-  void connect();
+  Future<void> connect();
   void sendMessage(NostrClientMessage message);
-  void disconnect();
+  Future<void> disconnect();
+  Future<void> dispose();
 }
 
 class NostrRelayProviderImpl implements NostrRelayProvider {
-  final String relayUrl;
+  final String _relayUrl;
   WebSocketChannel? _channel;
+  StreamSubscription? _subscription;
   final StreamController<NostrRelayMessage> _messageController =
       StreamController.broadcast();
 
   NostrRelayProviderImpl(
-    this.relayUrl,
+    this._relayUrl,
   );
 
   @override
   Stream<NostrRelayMessage> get messages => _messageController.stream;
 
   @override
-  void connect() {
-    _channel = WebSocketChannel.connect(Uri.parse(relayUrl));
-    _channel?.stream.listen((data) {
+  Future<void> connect() async {
+    final wsUrl = Uri.parse(_relayUrl);
+    _channel = WebSocketChannel.connect(wsUrl);
+    await _channel?.ready;
+
+    _subscription = _channel?.stream.listen((data) {
       final message = NostrRelayMessage.fromSerialized(data);
       _messageController.add(message);
     }, onError: (error) {
       _messageController.addError(error);
     }, onDone: () {
-      _messageController.close();
+      // Todo: Make custom error for this
+      _messageController.addError('Connection lost');
     });
   }
 
@@ -47,7 +53,16 @@ class NostrRelayProviderImpl implements NostrRelayProvider {
   }
 
   @override
-  void disconnect() {
-    _channel?.sink.close(status.goingAway);
+  Future<void> disconnect() async {
+    await _subscription?.cancel();
+    _subscription = null;
+    await _channel?.sink.close(status.goingAway);
+    _channel = null;
+  }
+
+  @override
+  Future<void> dispose() async {
+    await disconnect();
+    await _messageController.close();
   }
 }

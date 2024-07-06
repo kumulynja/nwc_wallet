@@ -10,15 +10,17 @@ import 'package:nwc_wallet/data/providers/nostr_relay_provider.dart';
 
 abstract class NostrRepository {
   Stream<NostrEvent> get events;
-  void connect();
+  Future<void> connect();
   void requestEvents(String subscriptionId, List<NostrFilters> filters);
   Future<bool> publishEvent(NostrEvent event);
   Future<bool> closeSubscription(String subscriptionId);
-  void disconnect();
+  Future<void> disconnect();
+  Future<void> dispose();
 }
 
 class NostrRepositoryImpl implements NostrRepository {
   final NostrRelayProviderImpl _relayProvider;
+  StreamSubscription? _subscription;
   final StreamController<NostrEvent> _eventController =
       StreamController.broadcast();
   final Map<String, Completer<bool>> _requestingEvents =
@@ -32,10 +34,18 @@ class NostrRepositoryImpl implements NostrRepository {
   Stream<NostrEvent> get events => _eventController.stream;
 
   @override
-  void connect() {
-    _relayProvider.connect();
-    _relayProvider.messages
-        .listen(_handleRelayMessage); // Todo: Handle errors and other callbacks
+  Future<void> connect() async {
+    await _relayProvider.connect();
+    _subscription = _relayProvider.messages.listen(
+      _handleRelayMessage,
+      onError: (error) {
+        _eventController.addError(error);
+      },
+      onDone: () {
+        // Todo: Is this even needed? Should I make custom error for this?
+        _eventController.addError('Connection lost');
+      },
+    );
   }
 
   @override
@@ -50,13 +60,13 @@ class NostrRepositoryImpl implements NostrRepository {
 
     _relayProvider.sendMessage(message);
 
-    final isPublishedSuccessfully = await Future.any([
-      completer.future,
-      Future.delayed(Duration(seconds: timeoutSec), () {
+    final isPublishedSuccessfully = completer.future.timeout(
+      Duration(seconds: timeoutSec),
+      onTimeout: () {
         debugPrint('Publish event timeout: ${event.id}');
         return false; // Return false on timeout
-      }),
-    ]);
+      },
+    );
 
     _publishingEvents.remove(event.id);
 
@@ -65,6 +75,7 @@ class NostrRepositoryImpl implements NostrRepository {
 
   @override
   void requestEvents(String subscriptionId, List<NostrFilters> filters) {
+    // Todo: Implement completion with EOSE
     final message =
         ClientRequestMessage(subscriptionId: subscriptionId, filters: filters);
     _relayProvider.sendMessage(message);
@@ -80,16 +91,13 @@ class NostrRepositoryImpl implements NostrRepository {
 
     _relayProvider.sendMessage(message);
 
-    final isClosedSuccessfully = await Future.any([
-      completer.future,
-      Future.delayed(
-          const Duration(
-            seconds: AppConfigs.defaultCloseSubscriptionTimeoutSec,
-          ), () {
+    final isClosedSuccessfully = completer.future.timeout(
+      const Duration(seconds: AppConfigs.defaultCloseSubscriptionTimeoutSec),
+      onTimeout: () {
         debugPrint('Close subscription timeout: $subscriptionId');
         return false; // Return false on timeout
-      }),
-    ]);
+      },
+    );
 
     _closingSubscriptions.remove(subscriptionId);
 
@@ -97,8 +105,17 @@ class NostrRepositoryImpl implements NostrRepository {
   }
 
   @override
-  void disconnect() {
-    _relayProvider.disconnect();
+  Future<void> disconnect() async {
+    await _subscription?.cancel();
+    _subscription = null;
+    await _relayProvider.disconnect();
+  }
+
+  @override
+  Future<void> dispose() async {
+    await _eventController.close();
+    await disconnect();
+    await _relayProvider.dispose();
   }
 
   void _handleRelayMessage(NostrRelayMessage message) {

@@ -67,7 +67,7 @@ class NwcWallet {
   }) async {
     // If first active connection, connect the _nwcService
     if (_nwcService.connections.isEmpty) {
-      _nwcService.connect();
+      await _nwcService.connect();
     }
 
     final connection = await _nwcService.addConnection(
@@ -84,7 +84,7 @@ class NwcWallet {
   Future<void> removeConnection(String pubkey) async {
     _nwcService.removeConnection(pubkey);
 
-    // Disconnect the _nwcService if no active connections left
+    // Disconnect from the relay's websocket if no active connections left
     if (_nwcService.connections.isEmpty) {
       await _nwcService.disconnect();
     }
@@ -251,14 +251,9 @@ class NwcWallet {
     await _nwcService.handleResponse(request: request, response: response);
   }
 
-  void resume() {
-    // If no connections, nothing to resume
-    if (_nwcService.connections.isNotEmpty) {
-      _nwcService.connect();
-    }
-  }
-
+  // After disposing, the instance is no longer usable
   Future<void> dispose() async {
-    _nwcService.disconnect();
+    await _nwcService.dispose();
+    _instance = null;
   }
 }

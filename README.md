@@ -13,20 +13,30 @@ and the Flutter guide for
 
 This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lightning-wallets/getting-started) side of the [Nostr Wallet Connect (NWC)](https://docs.nwc.dev/) protocol as described by [NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md). It is a Flutter package that can be integrated into any Lightning wallet app to let its users connect their wallet to websites, platforms, apps or any NWC-enabled services.
 
+## What does this package do for you?
+
+- It lets you generate or restore a Nostr keypair for the wallet
+- It lets you create and remove NWC connections to manage connections to websites, platforms, apps or any NWC-enabled services
+- It takes care of connecting to a Nostr relay and subscribing to events for the wallet
+- It handles and parses Nostr events like relay messages and NIP47 requests
+- It decrypts and validates NIP47 requests and puts them in a stream for the wallet to listen to
+-
+
 ## Features
 
 The package provides the following features without the need to understand anything about Nostr or the NWC protocol:
 
-- Generate or import a Nostr keypair for the wallet service.
-- Create and remove NWC URI's to connect to websites, platforms, apps or any NWC-enabled services.
+- Generate or import a Nostr keypair for the wallet.
+- Create and remove NWC URI's to manage connections to websites, platforms, apps or any NWC-enabled services.
 - Listen to a stream of NWC requests for your wallet on a specific relay.
-- Respond to NWC requests after handling them in your wallet.
+- Respond to NWC requests after handling them in the wallet.
 
 ## Limitations
 
 The package is still in development and should be used with caution. Following are some of the current limitations:
 
 - Only real-time events are supported, the package does not return missed events yet.
+- Currently a connection can not be updated, for example to change the permitted methods, only removed and added again.
 - The package is not fully tested or documented.
 - No connection monitoring and reconnect mechanism is implemented yet.
 - No retry mechanisms are currently implemented on failures.
@@ -37,7 +47,7 @@ Feel free to open any issues if you encounter any other limitations that are not
 
 ## Getting started
 
-To use this package, your app should have a Lightning Network node, wallet or access to a Lightning wallet service so you can handle the NWC requests. You can look at [ldk-node-flutter](https://github.com/LtbLightning/ldk-node-flutter) for a Flutter package that can be used to run a Lightning node on mobile.
+To use this package, your app should have a Lightning Network node, wallet or access to a Lightning wallet API so you can handle the NWC requests. You can look at [ldk-node-flutter](https://github.com/LtbLightning/ldk-node-flutter) for a Flutter package that can be used to run a Lightning node on mobile. But really any other Lightning wallet implementation can be used together with this package, as long as it can handle the NWC requests like getting the balance, generating an invoice, paying an invoice, etc.
 
 Also install any secure storage mechanism package you want to use to persist the wallet service's Nostr private key and created NWC connections.
 To keep this package independent of any specific secure storage mechanism or dependency, the package does not persist keypairs or connections between app restarts, that's up to the user of the package to implement.
@@ -53,11 +63,24 @@ final nostrKeyPair = NostrKeyPair.generate();
 
 // Todo: Save the keypair in your app's secure storage
 
-// Initialize the NwcWallet with the generated keypair,
+// Note: If you already have a Nostr keypair for the wallet service,
+//  and you have any existing NWC connections, you should import it,
+//  since the connections will not be usable with other keys.
+final nostrKeyPair = NostrKeyPair(
+    privateKey: 'your_private_key_here',
+);
+
+// If you have any existing NWC connections saved by your app,
+//  you should import them to the wallet service as a list of NwcConnection instances.
+final existingConnections = <NwcConnection>[];
+
+// Initialize an NwcWallet instance with the generated keypair,
 //  you can optionally pass a relay URL and
 //  a list of active NWC connections saved by your app.
+// Otherwise a default relay URL will be used.
 final nwcWallet = NwcWallet(
     walletNostrKeyPair: nostrKeyPair,
+    connections: existingConnections,
 );
 
 // Listen for nwc requests, handle them based on the method type and

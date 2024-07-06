@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nwc_wallet/constants/app_configs.dart';
+import 'package:nwc_wallet/data/models/nwc_request.dart';
 import 'package:nwc_wallet/enums/nostr_event_kind.dart';
 import 'package:nwc_wallet/nips/nip01.dart';
 import 'package:nwc_wallet/nips/nip04.dart';
@@ -53,7 +54,6 @@ void main() {
       );
 
       final connection = await nwcWallet.addConnection(
-        name: 'Test Connection',
         permittedMethods: [
           NwcMethod.getInfo,
           NwcMethod.getBalance,
@@ -68,7 +68,7 @@ void main() {
         switch (request.method) {
           case NwcMethod.getInfo:
             nwcWallet.getInfoRequestHandled(
-              request,
+              request as NwcGetInfoRequest,
               alias: 'kumulynja',
               color: '#FFA500',
               pubkey: nostrKeyPair.publicKey,
@@ -89,12 +89,13 @@ void main() {
             );
 
           case NwcMethod.getBalance:
-            nwcWallet.getBalanceRequestHandled(request, balanceSat: 987123);
+            nwcWallet.getBalanceRequestHandled(request as NwcGetBalanceRequest,
+                balanceSat: 987123);
           case NwcMethod.makeInvoice:
             const invoice =
                 'lntbs750u1pngrch7dq8w3jhxaqpp56sm3029nrfdjg67rr7tcdcpvtnngq5dz90xxf7h5zq6cp0y6vhyssp529ge5rfqtfryp4dn2gr4qg84rejfus653j3cf975fj9wyyhz2a7q9qyysgqcqp6xqrgegrzjqdcadltawh0z6qmj6ql2qr5t4ndvk5xz0582ag98dgrz9ml37hhjkzyuuqqqdugqqvqqqqqqqqqqqqqqfqef3lceuteux4sv0xarvmtw2sck964s4xwn2wx8d4q4k772v8jn3jtfhf9tjhqge5nhesgt6rvxlkkwvn4f8kwmtx0ghjal72nkv8gsqpc4uyvg';
             nwcWallet.makeInvoiceRequestHandled(
-              request,
+              request as NwcMakeInvoiceRequest,
               invoice: invoice,
               paymentHash:
                   'd43717a8b31a5b246bc31f9786e02c5ce68051a22bcc64faf4103580bc9a65c9',
@@ -105,10 +106,12 @@ void main() {
               metadata: {},
             );
           case NwcMethod.listTransactions:
-            nwcWallet.listTransactionsRequestHandled(request, transactions: []);
+            nwcWallet.listTransactionsRequestHandled(
+                request as NwcListTransactionsRequest,
+                transactions: []);
           case NwcMethod.lookupInvoice:
             nwcWallet.lookupInvoiceRequestHandled(
-              request,
+              request as NwcLookupInvoiceRequest,
               invoice:
                   'lntbs750u1pngrch7dq8w3jhxaqpp56sm3029nrfdjg67rr7tcdcpvtnngq5dz90xxf7h5zq6cp0y6vhyssp529ge5rfqtfryp4dn2gr4qg84rejfus653j3cf975fj9wyyhz2a7q9qyysgqcqp6xqrgegrzjqdcadltawh0z6qmj6ql2qr5t4ndvk5xz0582ag98dgrz9ml37hhjkzyuuqqqdugqqvqqqqqqqqqqqqqqfqef3lceuteux4sv0xarvmtw2sck964s4xwn2wx8d4q4k772v8jn3jtfhf9tjhqge5nhesgt6rvxlkkwvn4f8kwmtx0ghjal72nkv8gsqpc4uyvg',
               paymentHash:

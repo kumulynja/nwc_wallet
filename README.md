@@ -11,6 +11,8 @@ and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/developing-packages).
 -->
 
+# nwc_wallet Flutter package
+
 This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lightning-wallets/getting-started) side of the [Nostr Wallet Connect (NWC)](https://docs.nwc.dev/) protocol as described by [NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md). It is a Flutter package that can be integrated into any Lightning wallet app to let its users connect their wallet to websites, platforms, apps or any NWC-enabled services.
 
 [![NWC Infogram](https://github.com/kumulynja/nwc_wallet/assets/92805150/54bb7ec1-41fa-4bb5-b032-288bff9b77c1)](https://nwc.dev)
@@ -21,9 +23,9 @@ This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lig
 - It takes care of (re)connecting to a Nostr relay and subscribing to events for the wallet
 - It lets you create and remove NWC connections to manage connections to websites, platforms, apps or any NWC-enabled services
 - It handles and parses Nostr events like relay messages and NIP47 requests
-- It decrypts and validates NIP47 requests and puts them in a stream for the wallet to listen to
-- The validation of the requests includes checking that it is a valid NIP47 request, that the request is not expired if it contains an expiration tag, that it is comming from a known and active connection and that the requested method is a known method and permitted for that connection. If any of the checks fails, the package handles the response and will not put the request in the stream.
-- It provides methods to respond to NIP47 requests after you handle them in the wallet
+- It decrypts and validates NIP47 requests and puts them in a stream for you to listen to
+- The validation of the requests includes checking that it is a valid NIP47 request, that the request is not expired if it contains an expiration tag, that it is coming from a known and active connection and that the requested method is a known method and permitted for that connection. If any of the checks fails, the package handles the response and will not put the request in the stream.
+- It provides methods to respond to NIP47 requests after you have handled them with your wallet
 - The response methods take care of encrypting and publishing the response to the relay following NIP47
 
 ## What does this package not do for you?
@@ -45,7 +47,7 @@ You should handle the requests in real-time and respond to them as soon as possi
 
 - This package is not a Lightning wallet itself, it should be used alongside a Lightning wallet
 
-To use this package, your app should already have a Lightning Network node or wallet or have access to a Lightning wallet API so you can handle the NWC requests. You can look at [ldk-node-flutter](https://github.com/LtbLightning/ldk-node-flutter) for a Flutter package that can be used to run a Lightning node on mobile.
+To use this package, your app should already have a Lightning Network node or wallet embedded or have access to a Lightning wallet API so you can handle the NWC requests. You can look at [ldk-node-flutter](https://github.com/LtbLightning/ldk-node-flutter) for a Flutter package that can be used to run a Lightning node on mobile.
 
 ## Getting started
 
@@ -66,7 +68,7 @@ dependencies:
 
 Next, you can follow the steps below to integrate the package into your app:
 
-1. Generate or import a Nostr keypair for the wallet service\*
+### 1. Generate or import a Nostr keypair for the wallet service\*
 
 ```dart
 // New Nostr keypair
@@ -91,9 +93,11 @@ You should persist the private key in your app's secure storage to be able to us
 
 \* I recommend not using the same keypair of a user's Nostr profile (social media or others) for the wallet service. Generate or import a separate keypair used only for NWC. Otherwise the apps you connect with can link your profile/identity with your wallet info and with the payments you make for their connection. This is a privacy concern and can be avoided by using a separate keypair for the wallet service.
 
-2. Initialize an NwcWallet instance
+### 2. Initialize an `NwcWallet` instance
 
-To initialize an NwcWallet instance, you should provide it the Nostr keypair from the previous step.
+`NwcWallet` is the main class of this package. It is a singleton class as normally you would only use one dedicated relay for NWC connections in your app. It takes care of connecting to the relay, subscribing to events and handling NIP47 requests and responses.
+
+To initialize an `NwcWallet` instance, you should provide it the Nostr keypair from the previous step.
 If it is not the first time and the user already has some active connections, also pass the list of existing NWC connections as saved by your app. If you want to get requests from when the app was not running, you can also pass the last event timestamp as saved by your app. You can also provide your preferred relay URL, but if you don't provide one, a default relay will be used.
 
 ```dart
@@ -105,7 +109,7 @@ final nwcWallet = NwcWallet(
 );
 ```
 
-3. Listen for NWC requests and handle them based on the method type and with the wallet in your app
+### 3. Listen for NWC requests and handle them based on the method type and with the wallet in your app
 
 For every request that comes in through the stream, you should handle it based on the method type and call the appropriate method after the request has been handled through the user's Lightning wallet. This can be done by a simple switch statement based on the method type of the request.
 
@@ -233,7 +237,7 @@ try {
 }
 ```
 
-4. Create and store a new NWC connection
+### 4. Create and store a new NWC connection
 
 To create a new NWC connection, you can use the `addConnection` method:
 
@@ -255,7 +259,7 @@ Also let the user enter a readable name, spending limit(s), approval logic and t
 
 ## WIP
 
-All basic functionality of the NWC protocol is implemented and working in this package, but it is still a work in progress, so be aware that following things should still be added or improved upon in future versions:
+All basic functionality of the NWC protocol is implemented and working in this package, so you should already be able to use it in your app to make it compatible with NWC apps. But software is never finished, so be aware that following things should still be added or improved upon in future versions:
 
 - [ ] Missed events handling
 - [ ] Connection monitoring

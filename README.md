@@ -13,7 +13,7 @@ and the Flutter guide for
 
 This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lightning-wallets/getting-started) side of the [Nostr Wallet Connect (NWC)](https://docs.nwc.dev/) protocol as described by [NIP-47](https://github.com/nostr-protocol/nips/blob/master/47.md). It is a Flutter package that can be integrated into any Lightning wallet app to let its users connect their wallet to websites, platforms, apps or any NWC-enabled services.
 
-![nwc_wallet infogram from https://nwc.dev](https://github.com/kumulynja/nwc_wallet/assets/92805150/54bb7ec1-41fa-4bb5-b032-288bff9b77c1)
+[![NWC Infogram](https://github.com/kumulynja/nwc_wallet/assets/92805150/54bb7ec1-41fa-4bb5-b032-288bff9b77c1)](https://nwc.dev)
 
 ## What does this package do for you?
 

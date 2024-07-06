@@ -28,7 +28,7 @@ This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lig
 - It provides methods to respond to NIP47 requests after you have handled them with your wallet
 - The response methods take care of encrypting and publishing the response to the relay following NIP47
 
-## What does this package not do for you?
+## What does this package NOT do for you?
 
 - It does not persist the wallet service's Nostr keypair or the created NWC connections between app restarts
 
@@ -91,7 +91,7 @@ final nostrKeyPair = NostrKeyPair.fromNsec('your_nsec_here');
 
 You should persist the private key in your app's secure storage to be able to use the same keypair between app restarts.
 
-\* I recommend not using the same keypair of a user's Nostr profile (social media or others) for the wallet service. Generate or import a separate keypair used only for NWC. Otherwise the apps you connect with can link your profile/identity with your wallet info and with the payments you make for their connection. This is a privacy concern and can be avoided by using a separate keypair for the wallet service.
+\* I recommend not using the same keypair of a user's Nostr profile (social media or others) for the wallet service. Generate or import a separate keypair used ONLY for NWC. Otherwise the apps you connect with can link your profile/identity with your wallet info and with the payments you make for their connection. This is a privacy concern and can be avoided by using a separate keypair for the wallet service.
 
 ### 2. Initialize an `NwcWallet` instance
 

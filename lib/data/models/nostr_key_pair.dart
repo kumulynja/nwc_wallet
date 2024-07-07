@@ -1,6 +1,7 @@
 import 'package:bip340/bip340.dart' as bip340;
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:nwc_wallet/nips/nip06.dart';
 import 'package:nwc_wallet/nips/nip19.dart';
 import 'package:nwc_wallet/utils/secret_generator.dart';
 
@@ -18,6 +19,11 @@ class NostrKeyPair extends Equatable {
 
   factory NostrKeyPair.generate() {
     final privateKey = _generatePrivateKey();
+    return NostrKeyPair(privateKey: privateKey);
+  }
+
+  factory NostrKeyPair.fromMnemonic(String mnemonic) {
+    final privateKey = Nip06.mnemonicToPrivateKey(mnemonic);
     return NostrKeyPair(privateKey: privateKey);
   }
 

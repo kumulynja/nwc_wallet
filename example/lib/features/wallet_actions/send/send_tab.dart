@@ -1,0 +1,125 @@
+import 'package:example/constants/app_sizes.dart';
+import 'package:example/features/wallet_actions/send/send_controller.dart';
+import 'package:example/features/wallet_actions/send/send_state.dart';
+import 'package:example/services/lightning_wallet_service.dart';
+import 'package:example/widgets/wallets/wallet_selection_field.dart';
+import 'package:flutter/material.dart';
+
+class SendTab extends StatefulWidget {
+  const SendTab({required this.walletServices, super.key});
+
+  final List<LightningWalletService> walletServices;
+
+  @override
+  SendTabState createState() => SendTabState();
+}
+
+class SendTabState extends State<SendTab> {
+  SendState _state = const SendState();
+  late SendController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = SendController(
+      getState: () => _state,
+      updateState: (SendState state) => setState(() => _state = state),
+      walletServices: widget.walletServices,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const SizedBox(height: AppSizes.kSpacingUnit * 2),
+
+        _state.availableWallets.length > 1
+            ? WalletSelectionField(
+                selectedWallet: _state.selectedWallet,
+                availableWallets: _state.availableWallets,
+                onLightningNodeImplementationChange:
+                    _controller.onLightningNodeImplementationChange,
+                helpText: 'The wallet to send funds from.',
+              )
+            : const SizedBox.shrink(),
+        const SizedBox(height: AppSizes.kSpacingUnit * 2),
+        // Amount Field
+        SizedBox(
+          width: 250,
+          child: TextField(
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Amount (optional)',
+              hintText: '0',
+              helperText: 'The amount you want to send in BTC.',
+            ),
+            onChanged: _controller.amountChangeHandler,
+          ),
+        ),
+        const SizedBox(height: AppSizes.kSpacingUnit * 2),
+        // Invoice Field
+        SizedBox(
+          width: 250,
+          child: TextField(
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Invoice',
+              hintText: '1bc1q2c3...',
+              helperText: 'The invoice to pay.',
+            ),
+            onChanged: _controller.invoiceChangeHandler,
+          ),
+        ),
+        const SizedBox(height: AppSizes.kSpacingUnit * 2),
+        // Error message
+        SizedBox(
+          height: AppSizes.kSpacingUnit * 2,
+          child: Text(
+            _state.error is InvalidAmountException
+                ? 'Please enter a valid amount.'
+                : _state.error is NotEnoughFundsException
+                    ? 'Not enough funds available.'
+                    : _state.error is PaymentException
+                        ? 'Failed to make payment. Please try again.'
+                        : '',
+            style: const TextStyle(
+              color: Colors.red,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSizes.kSpacingUnit * 2),
+        // Send funds Button
+        ElevatedButton.icon(
+          onPressed: _state.invoice == null ||
+                  _state.invoice!.isEmpty ||
+                  _state.error is InvalidAmountException ||
+                  _state.error is NotEnoughFundsException ||
+                  _state.isMakingPayment
+              ? null
+              : () => _controller.makePayment().then(
+                    (_) {
+                      if (_state.txId != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                'Payment successful. Tx ID: ${_state.partialTxId}'),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+          label: const Text('Send funds'),
+          icon: _state.isMakingPayment
+              ? const CircularProgressIndicator()
+              : const Icon(Icons.send),
+        ),
+      ],
+    );
+  }
+}

@@ -5,6 +5,8 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:example/repositories/mnemonic_repository.dart';
+import 'package:example/services/lightning_wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,8 +14,14 @@ import 'package:example/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+    final ldkNodeLightningWalletService = LdkNodeLightningWalletService(
+      mnemonicRepository: SecureStorageMnemonicRepository(),
+    );
+    await ldkNodeLightningWalletService.init();
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(MyApp(
+      ldkNodeLightningWalletService: ldkNodeLightningWalletService,
+    ));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

@@ -17,6 +17,8 @@ dependencies:
   equatable: ^2.0.5
   pointycastle: ^3.9.1
   web_socket_channel: ^3.0.0
+  bip39: ^1.0.6
+  bip32: ^2.0.0
 
 dev_dependencies:
   flutter_test:

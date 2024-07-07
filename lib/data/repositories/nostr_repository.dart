@@ -13,7 +13,7 @@ abstract class NostrRepository {
   Future<void> connect();
   void requestEvents(String subscriptionId, List<NostrFilters> filters);
   Future<bool> publishEvent(NostrEvent event);
-  Future<bool> closeSubscription(String subscriptionId);
+  void closeSubscription(String subscriptionId);
   Future<void> disconnect();
   Future<void> dispose();
 }
@@ -26,7 +26,6 @@ class NostrRepositoryImpl implements NostrRepository {
   final Map<String, Completer<bool>> _requestingEvents =
       {}; // Todo: Implement completion with EOSE
   final Map<String, Completer<bool>> _publishingEvents = {};
-  final Map<String, Completer<bool>> _closingSubscriptions = {};
 
   NostrRepositoryImpl(this._relayProvider);
 
@@ -39,9 +38,11 @@ class NostrRepositoryImpl implements NostrRepository {
     _subscription = _relayProvider.messages.listen(
       _handleRelayMessage,
       onError: (error) {
+        debugPrint('Error listening to events: $error');
         _eventController.addError(error);
       },
       onDone: () {
+        debugPrint('Event subscription done');
         // Todo: Is this even needed? Should I make custom error for this?
         _eventController.addError('Connection lost');
       },
@@ -82,26 +83,10 @@ class NostrRepositoryImpl implements NostrRepository {
   }
 
   @override
-  Future<bool> closeSubscription(String subscriptionId) async {
-    final completer = Completer<bool>();
+  void closeSubscription(String subscriptionId) async {
     final message = ClientCloseMessage(subscriptionId: subscriptionId);
 
-    _closingSubscriptions[subscriptionId] =
-        completer; // Store completer with subscription ID
-
     _relayProvider.sendMessage(message);
-
-    final isClosedSuccessfully = await completer.future.timeout(
-      const Duration(seconds: AppConfigs.defaultCloseSubscriptionTimeoutSec),
-      onTimeout: () {
-        debugPrint('Close subscription timeout: $subscriptionId');
-        return false; // Return false on timeout
-      },
-    );
-
-    _closingSubscriptions.remove(subscriptionId);
-
-    return isClosedSuccessfully;
   }
 
   @override
@@ -135,14 +120,11 @@ class NostrRepositoryImpl implements NostrRepository {
       );
     } else if (message is RelayClosedMessage) {
       debugPrint(
-        'Subscription closed: ${message.subscriptionId} with message: ${message.message}',
+        'Subscription closed by relay: ${message.subscriptionId} with message: ${message.message}',
       );
 
-      // Handle closed message by completing the completer
-      final completer = _closingSubscriptions[message.subscriptionId];
-      if (completer != null) {
-        completer.complete(true);
-      }
+      _eventController
+          .addError('Subscription closed by relay: ${message.message}');
     } else if (message is RelayOkMessage) {
       debugPrint(
         'OK message: Event ${message.eventId} accepted: ${message.accepted}, message: ${message.message}',

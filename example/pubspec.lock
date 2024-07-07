@@ -49,6 +49,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.6"
+  bolt11_decoder:
+    dependency: "direct main"
+    description:
+      name: bolt11_decoder
+      sha256: ce3c4e4311e84c7b6ceb06ffbf84329bf6bdac1244ecfa1fc157c46038021bbc
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   boolean_selector:
     dependency: transitive
     description:
@@ -98,7 +106,7 @@ packages:
     source: hosted
     version: "1.18.0"
   convert:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: convert
       sha256: "0f08b14755d163f6e2134cb58222dd25ea2a2ee8a195e53983d57c075324d592"
@@ -121,6 +129,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.8"
+  decimal:
+    dependency: transitive
+    description:
+      name: decimal
+      sha256: "24a261d5d5c87e86c7651c417a5dbdf8bcd7080dd592533910e8d0505a279f21"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.3"
   equatable:
     dependency: "direct main"
     description:
@@ -248,8 +264,8 @@ packages:
     description:
       path: "."
       ref: "upgrade-v0.3.0"
-      resolved-ref: "4b29c077377246907a8a721d1c55a888a212b110"
-      url: "https://github.com/LtbLightning/ldk-node-flutter"
+      resolved-ref: "23919deafcb3466b602c4a733f3db38c5dfc00ac"
+      url: "https://github.com/kumulynja/ldk-node-flutter"
     source: git
     version: "0.3.0"
   leak_tracker:
@@ -427,6 +443,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
+  rational:
+    dependency: transitive
+    description:
+      name: rational
+      sha256: cb808fb6f1a839e6fc5f7d8cb3b0a10e1db48b3be102de73938c627f0b636336
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.3"
   sky_engine:
     dependency: transitive
     description: flutter

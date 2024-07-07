@@ -1,0 +1,4 @@
+enum PaymentDirection {
+  incoming,
+  outgoing,
+}

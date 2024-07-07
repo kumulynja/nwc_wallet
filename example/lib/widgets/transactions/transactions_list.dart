@@ -1,4 +1,3 @@
-import 'package:example/enums/lightning_node_implementation.dart';
 import 'package:example/view_models/transactions_list_item_view_model.dart';
 import 'package:example/widgets/transactions/transactions_list_item.dart';
 import 'package:flutter/material.dart';
@@ -7,11 +6,9 @@ class TransactionsList extends StatelessWidget {
   const TransactionsList({
     super.key,
     required this.transactions,
-    required this.lightningNodeImplementation,
   });
 
   final List<TransactionsListItemViewModel>? transactions;
-  final LightningNodeImplementation lightningNodeImplementation;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +32,6 @@ class TransactionsList extends StatelessWidget {
           itemBuilder: (ctx, index) {
             return TransactionsListItem(
               transaction: transactions![index],
-              lightningNodeImplementation: lightningNodeImplementation,
             );
           },
           itemCount: transactions == null ? 0 : transactions!.length,

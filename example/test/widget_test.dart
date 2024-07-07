@@ -7,6 +7,7 @@
 
 import 'package:example/repositories/mnemonic_repository.dart';
 import 'package:example/services/lightning_wallet_service.dart';
+import 'package:example/services/nwc_wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -14,13 +15,19 @@ import 'package:example/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+    final mnemonicRepository = SecureStorageMnemonicRepository();
     final ldkNodeLightningWalletService = LdkNodeLightningWalletService(
-      mnemonicRepository: SecureStorageMnemonicRepository(),
+      mnemonicRepository: mnemonicRepository,
     );
     await ldkNodeLightningWalletService.init();
+    final nwcWalletService = NwcWalletServiceImpl(
+      lightningWalletService: ldkNodeLightningWalletService,
+      mnemonicRepository: mnemonicRepository,
+    );
     // Build our app and trigger a frame.
     await tester.pumpWidget(MyApp(
       ldkNodeLightningWalletService: ldkNodeLightningWalletService,
+      nwcWalletService: nwcWalletService,
     ));
 
     // Verify that our counter starts at 0.

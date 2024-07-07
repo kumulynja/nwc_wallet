@@ -1,12 +1,9 @@
-import 'package:example/enums/lightning_node_implementation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
 @immutable
 class ReceiveState extends Equatable {
   const ReceiveState({
-    this.selectedWallet,
-    this.availableWallets = const [],
     this.amountSat,
     this.isInvalidAmount = false,
     this.label,
@@ -16,8 +13,6 @@ class ReceiveState extends Equatable {
     this.isGeneratingInvoice = false,
   });
 
-  final LightningNodeImplementation? selectedWallet;
-  final List<LightningNodeImplementation> availableWallets;
   final int? amountSat;
   final bool isInvalidAmount;
   final String? label;
@@ -58,8 +53,6 @@ class ReceiveState extends Equatable {
   }
 
   ReceiveState copyWith({
-    LightningNodeImplementation? selectedWallet,
-    List<LightningNodeImplementation>? availableWallets,
     int? amountSat,
     bool? isInvalidAmount,
     String? label,
@@ -69,8 +62,6 @@ class ReceiveState extends Equatable {
     bool? isGeneratingInvoice,
   }) {
     return ReceiveState(
-      selectedWallet: selectedWallet ?? this.selectedWallet,
-      availableWallets: availableWallets ?? this.availableWallets,
       amountSat: amountSat ?? this.amountSat,
       isInvalidAmount: isInvalidAmount ?? this.isInvalidAmount,
       label: label ?? this.label,
@@ -83,8 +74,6 @@ class ReceiveState extends Equatable {
 
   @override
   List<Object?> get props => [
-        selectedWallet,
-        availableWallets,
         amountSat,
         isInvalidAmount,
         label,

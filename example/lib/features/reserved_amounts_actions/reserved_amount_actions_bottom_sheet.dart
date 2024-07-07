@@ -16,10 +16,6 @@ class ReservedAmountActionsBottomSheet extends StatelessWidget {
       icon: Icon(Icons.flash_on),
       text: 'Instant Spending',
     ),
-    Tab(
-      icon: Icon(Icons.move_up),
-      text: 'Savings',
-    ),
   ];
 
   @override

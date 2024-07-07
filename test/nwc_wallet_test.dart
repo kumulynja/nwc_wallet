@@ -70,7 +70,7 @@ void main() {
             nwcWallet.getInfoRequestHandled(
               request as NwcGetInfoRequest,
               alias: 'kumulynja',
-              color: '#FFA500',
+              color: '#FF9900',
               pubkey: nostrKeyPair.publicKey,
               network: BitcoinNetwork.signet,
               blockHeight: 1220149,

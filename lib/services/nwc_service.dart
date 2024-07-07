@@ -69,6 +69,8 @@ class NwcServiceImpl implements NwcService {
 
       // Was able to subscribe to requests, so reset the retry count
       _retryCount = 0;
+
+      print('...connected to relay.');
     } catch (e) {
       debugPrint('Error connecting: $e');
       await disconnect();
@@ -126,12 +128,8 @@ class NwcServiceImpl implements NwcService {
   Future<void> disconnect() async {
     // Cancel the reconnect timer if it's running to avoid reconnecting
     _reconnectTimer?.cancel();
-    // Close the subscription on the relay
-    final isNostrSubscriptionClosed =
-        await _nostrRepository.closeSubscription(_subscriptionId);
-    if (!isNostrSubscriptionClosed) {
-      throw Exception('Failed to close subscription');
-    }
+    // Close the subscription on the relay (Todo: check if relay didn't close it already through the error event)
+    _nostrRepository.closeSubscription(_subscriptionId);
     // Stop listening to events
     await _subscription?.cancel();
     _subscription = null;
@@ -151,10 +149,12 @@ class NwcServiceImpl implements NwcService {
     _subscription = _nostrRepository.events.listen(
       _handleEvent,
       onError: (error) async {
+        debugPrint('Error listening to requests: $error');
         await disconnect();
         await _scheduleReconnect();
       },
       onDone: () async {
+        debugPrint('Request subscription done');
         await disconnect();
         await _scheduleReconnect();
       },
@@ -174,6 +174,7 @@ class NwcServiceImpl implements NwcService {
   }
 
   Future<void> _scheduleReconnect() async {
+    print('Scheduling reconnect in ${pow(2, _retryCount).toInt()} seconds');
     // Exponential backoff strategy with min 1 second and max 64 seconds
     final delay = Duration(seconds: pow(2, _retryCount).toInt());
     _retryCount = min(_retryCount + 1, 6);
@@ -183,6 +184,7 @@ class NwcServiceImpl implements NwcService {
       delay,
       () async {
         // Call the connect function again
+        print('Reconnecting...');
         await connect();
       },
     );

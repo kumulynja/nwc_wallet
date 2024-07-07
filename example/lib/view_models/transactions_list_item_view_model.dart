@@ -1,5 +1,6 @@
-import 'package:example/entities/transaction_entity.dart';
+import 'package:example/entities/payment_details_entity.dart';
 import 'package:equatable/equatable.dart';
+import 'package:example/enums/payment_direction.dart';
 
 class TransactionsListItemViewModel extends Equatable {
   final String id;
@@ -12,9 +13,12 @@ class TransactionsListItemViewModel extends Equatable {
     this.timestamp,
   });
 
-  TransactionsListItemViewModel.fromTransactionEntity(TransactionEntity entity)
-      : id = entity.id,
-        amountSat = entity.receivedAmountSat - entity.sentAmountSat,
+  TransactionsListItemViewModel.fromTransactionEntity(
+      PaymentDetailsEntity entity)
+      : id = entity.paymentHash,
+        amountSat = entity.direction == PaymentDirection.incoming
+            ? entity.amountSat!
+            : -entity.amountSat!,
         timestamp = entity.timestamp;
 
   bool get isIncoming => amountSat > 0;

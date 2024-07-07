@@ -1,17 +1,15 @@
 import 'package:example/constants/app_sizes.dart';
-import 'package:example/enums/lightning_node_implementation.dart';
 import 'package:example/features/wallet_actions/receive/receive_controller.dart';
 import 'package:example/features/wallet_actions/receive/receive_state.dart';
 import 'package:example/services/lightning_wallet_service.dart';
-import 'package:example/widgets/wallets/wallet_selection_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class ReceiveTab extends StatefulWidget {
-  const ReceiveTab({required this.walletServices, super.key});
+  const ReceiveTab({required this.walletService, super.key});
 
-  final List<LightningWalletService> walletServices;
+  final LightningWalletService walletService;
 
   @override
   ReceiveTabState createState() => ReceiveTabState();
@@ -28,7 +26,7 @@ class ReceiveTabState extends State<ReceiveTab> {
     _controller = ReceiveController(
       getState: () => _state,
       updateState: (ReceiveState state) => setState(() => _state = state),
-      walletServices: widget.walletServices,
+      walletService: widget.walletService,
     );
   }
 
@@ -42,10 +40,7 @@ class ReceiveTabState extends State<ReceiveTab> {
             ? const CircularProgressIndicator()
             : _state.bip21Uri == null || _state.bip21Uri!.isEmpty
                 ? ReceiveTabInputFields(
-                    selectedWallet: _state.selectedWallet,
-                    availableWallets: _state.availableWallets,
-                    onLightningNodeImplementationChange:
-                        _controller.onLightningNodeImplementationChange,
+                    hasWalletAvailable: widget.walletService.hasWallet,
                     amountChangeHandler: _controller.amountChangeHandler,
                     labelChangeHandler: _controller.labelChangeHandler,
                     messageChangeHandler: _controller.messageChangeHandler,
@@ -64,9 +59,7 @@ class ReceiveTabState extends State<ReceiveTab> {
 class ReceiveTabInputFields extends StatelessWidget {
   const ReceiveTabInputFields({
     super.key,
-    this.selectedWallet,
-    required this.availableWallets,
-    required this.onLightningNodeImplementationChange,
+    this.hasWalletAvailable = false,
     required this.amountChangeHandler,
     required this.labelChangeHandler,
     required this.messageChangeHandler,
@@ -74,10 +67,7 @@ class ReceiveTabInputFields extends StatelessWidget {
     required this.generateInvoiceHandler,
   });
 
-  final LightningNodeImplementation? selectedWallet;
-  final List<LightningNodeImplementation> availableWallets;
-  final Function(LightningNodeImplementation)
-      onLightningNodeImplementationChange;
+  final bool hasWalletAvailable;
   final Function(String?) amountChangeHandler;
   final Function(String?) labelChangeHandler;
   final Function(String?) messageChangeHandler;
@@ -91,17 +81,6 @@ class ReceiveTabInputFields extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: AppSizes.kSpacingUnit * 2),
-        // Wallet Selection
-        availableWallets.length > 1
-            ? WalletSelectionField(
-                selectedWallet: selectedWallet,
-                availableWallets: availableWallets,
-                onLightningNodeImplementationChange:
-                    onLightningNodeImplementationChange,
-                helpText: 'The wallet to receive funds in.',
-              )
-            : const SizedBox(),
-        const SizedBox(height: AppSizes.kSpacingUnit * 2),
         // Amount Field
         SizedBox(
           width: 250,
@@ -111,7 +90,7 @@ class ReceiveTabInputFields extends StatelessWidget {
               border: OutlineInputBorder(),
               labelText: 'Amount (optional)',
               hintText: '0',
-              helperText: 'The amount you want to receive in BTC.',
+              helperText: 'The amount of sats to receive.',
             ),
             onChanged: amountChangeHandler,
           ),
@@ -161,7 +140,7 @@ class ReceiveTabInputFields extends StatelessWidget {
         const SizedBox(height: AppSizes.kSpacingUnit * 2),
         // Generate invoice Button
         ElevatedButton.icon(
-          onPressed: availableWallets.isEmpty || isInvalidAmount
+          onPressed: !hasWalletAvailable || isInvalidAmount
               ? null
               : () async {
                   await generateInvoiceHandler();

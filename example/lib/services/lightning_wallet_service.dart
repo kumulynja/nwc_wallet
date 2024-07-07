@@ -1,17 +1,25 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
-import 'package:example/enums/lightning_node_implementation.dart';
-import 'package:example/entities/transaction_entity.dart';
+import 'package:convert/convert.dart';
+import 'package:example/entities/payment_details_entity.dart';
 import 'package:example/repositories/mnemonic_repository.dart';
+import 'package:example/enums/payment_direction.dart' as direction;
 import 'package:ldk_node/ldk_node.dart';
+import 'package:nwc_wallet/nwc_wallet.dart';
 import 'package:path_provider/path_provider.dart';
 
 abstract class LightningWalletService {
-  LightningNodeImplementation get lightningNodeImplementation;
+  bool get hasWallet;
+  String get alias;
+  String get color;
+  Future<String> get nodeId;
+  BitcoinNetwork get network;
+  Future<int> get blockHeight;
+  Future<String> get blockHash;
   Future<void> init();
   Future<void> addWallet();
-  bool get hasWallet;
   Future<void> deleteWallet();
   Future<void> sync();
   Future<int> get spendableBalanceSat;
@@ -29,10 +37,11 @@ abstract class LightningWalletService {
   });
   Future<(String? bitcoinInvoice, String? lightningInvoice)> generateInvoices({
     int? amountSat,
-    int expirySecs,
-    String description,
+    int? expirySecs,
+    String? description,
   });
-  Future<List<TransactionEntity>> getTransactions();
+  Future<List<PaymentDetailsEntity>> getTransactions();
+  Future<PaymentDetailsEntity?> getTransactionById(String id);
   Future<String> pay(
     String invoice, {
     int? amountSat,
@@ -48,8 +57,9 @@ class NoWalletException implements Exception {
 }
 
 class LdkNodeLightningWalletService implements LightningWalletService {
-  final LightningNodeImplementation _lightningNodeImplementation =
-      LightningNodeImplementation.ldkNode;
+  static const _alias = 'ldk_node';
+  static const _color = '#FF9900';
+
   final MnemonicRepository _mnemonicRepository;
   Node? _node;
 
@@ -58,13 +68,8 @@ class LdkNodeLightningWalletService implements LightningWalletService {
   }) : _mnemonicRepository = mnemonicRepository;
 
   @override
-  LightningNodeImplementation get lightningNodeImplementation =>
-      _lightningNodeImplementation;
-
-  @override
   Future<void> init() async {
-    final mnemonic = await _mnemonicRepository
-        .getMnemonic(_lightningNodeImplementation.label);
+    final mnemonic = await _mnemonicRepository.getMnemonic(_alias);
     if (mnemonic != null && mnemonic.isNotEmpty) {
       await _initialize(Mnemonic(seedPhrase: mnemonic));
 
@@ -81,7 +86,7 @@ class LdkNodeLightningWalletService implements LightningWalletService {
     print('Generated mnemonic: ${mnemonic.seedPhrase}');
 
     await _mnemonicRepository.setMnemonic(
-      _lightningNodeImplementation.label,
+      _alias,
       mnemonic.seedPhrase,
     );
 
@@ -98,10 +103,47 @@ class LdkNodeLightningWalletService implements LightningWalletService {
   bool get hasWallet => _node != null;
 
   @override
+  String get alias => _alias;
+
+  @override
+  String get color => _color;
+
+  @override
+  Future<String> get nodeId async {
+    if (_node == null) {
+      throw NoWalletException('A Lightning node has to be initialized first!');
+    }
+
+    final publicKey = await _node!.nodeId();
+    return publicKey.hex;
+  }
+
+  @override
+  BitcoinNetwork get network => BitcoinNetwork.signet;
+
+  @override
+  Future<int> get blockHeight async {
+    if (_node == null) {
+      return 0;
+    }
+    final status = await _node!.status();
+    return status.currentBestBlock.height;
+  }
+
+  @override
+  Future<String> get blockHash async {
+    if (_node == null) {
+      return '';
+    }
+
+    final status = await _node!.status();
+    return status.currentBestBlock.blockHash;
+  }
+
+  @override
   Future<void> deleteWallet() async {
     if (_node != null) {
-      await _mnemonicRepository
-          .deleteMnemonic(_lightningNodeImplementation.label);
+      await _mnemonicRepository.deleteMnemonic(_alias);
       await _node!.stop();
       await Future.delayed(const Duration(seconds: 12));
       await _clearCache();
@@ -148,25 +190,24 @@ class LdkNodeLightningWalletService implements LightningWalletService {
   @override
   Future<(String?, String?)> generateInvoices({
     int? amountSat,
-    int expirySecs = 3600 * 24, // Default to 1 day
-    String description = 'NWC Wallet Demo',
+    int? expirySecs, // Default to 1 day
+    String? description,
   }) async {
     if (_node == null) {
       throw NoWalletException('A Lightning node has to be initialized first!');
     }
 
+    description = description ?? 'NWC Wallet Demo';
+    expirySecs = expirySecs ?? 3600 * 24;
     Bolt11Payment bolt11Payment = await _node!.bolt11Payment();
     Bolt11Invoice? bolt11;
     try {
       if (amountSat == null) {
-        // 18. Change to receive via a JIT channel when no amount is specified
         bolt11 = await bolt11Payment.receiveVariableAmountViaJitChannel(
           expirySecs: expirySecs,
           description: description,
         );
       } else {
-        // 19. Check the inbound liquidity and request a JIT channel if needed
-        //  otherwise receive the payment as usual.
         if (await inboundLiquiditySat < amountSat) {
           bolt11 = await bolt11Payment.receiveViaJitChannel(
             amountMsat: BigInt.from(amountSat * 1000),
@@ -290,11 +331,11 @@ class LdkNodeLightningWalletService implements LightningWalletService {
             amountMsat: BigInt.from(amountSat * 1000),
           );
 
-    return hash.field0.toString();
+    return hash.field0.hexCode;
   }
 
   @override
-  Future<List<TransactionEntity>> getTransactions() async {
+  Future<List<PaymentDetailsEntity>> getTransactions() async {
     if (_node == null) {
       throw NoWalletException('A Lightning node has to be initialized first!');
     }
@@ -303,20 +344,66 @@ class LdkNodeLightningWalletService implements LightningWalletService {
 
     return payments
         .where((payment) => payment.status == PaymentStatus.succeeded)
-        .map((payment) {
-      return TransactionEntity(
-        id: payment.id.field0.toString(),
-        receivedAmountSat: payment.direction == PaymentDirection.inbound &&
-                payment.amountMsat != null
-            ? payment.amountMsat!.toInt() ~/ 1000
-            : 0,
-        sentAmountSat: payment.direction == PaymentDirection.outbound &&
-                payment.amountMsat != null
-            ? payment.amountMsat!.toInt() ~/ 1000
-            : 0,
-        timestamp: null,
-      );
-    }).toList();
+        .map(
+      (payment) {
+        String? preimage;
+        if (payment.kind is PaymentKind_Bolt11) {
+          final bolt11 = payment.kind as PaymentKind_Bolt11;
+          preimage = bolt11.preimage?.data.hexCode;
+        } else if (payment.kind is PaymentKind_Bolt11Jit) {
+          final bolt11Jit = payment.kind as PaymentKind_Bolt11Jit;
+          preimage = bolt11Jit.preimage?.data.hexCode;
+        }
+
+        return PaymentDetailsEntity(
+          paymentHash: payment.id.field0.toString(),
+          amountSat: payment.amountMsat != null
+              ? payment.amountMsat!.toInt() ~/ 1000
+              : 0,
+          direction: payment.direction == PaymentDirection.inbound
+              ? direction.PaymentDirection.incoming
+              : direction.PaymentDirection.outgoing,
+          isPaid: true,
+          preimage: preimage,
+          timestamp: null,
+        );
+      },
+    ).toList();
+  }
+
+  @override
+  Future<PaymentDetailsEntity?> getTransactionById(String id) async {
+    if (_node == null) {
+      throw NoWalletException('A Lightning node has to be initialized first!');
+    }
+
+    final payment = await _node!.payment(
+      paymentId: PaymentId(field0: id.toU8Array32()),
+    );
+
+    if (payment == null) {
+      return null;
+    }
+
+    String? preimage;
+    if (payment.kind is PaymentKind_Bolt11) {
+      final bolt11 = payment.kind as PaymentKind_Bolt11;
+      preimage = bolt11.preimage?.data.hexCode;
+    } else if (payment.kind is PaymentKind_Bolt11Jit) {
+      final bolt11Jit = payment.kind as PaymentKind_Bolt11Jit;
+      preimage = bolt11Jit.preimage?.data.hexCode;
+    }
+
+    return PaymentDetailsEntity(
+      paymentHash: id,
+      amountSat:
+          payment.amountMsat != null ? payment.amountMsat!.toInt() ~/ 1000 : 0,
+      direction: payment.direction == PaymentDirection.inbound
+          ? direction.PaymentDirection.incoming
+          : direction.PaymentDirection.outgoing,
+      preimage: preimage,
+      isPaid: payment.status == PaymentStatus.succeeded,
+    );
   }
 
   Future<void> _initialize(Mnemonic mnemonic) async {
@@ -357,7 +444,13 @@ class LdkNodeLightningWalletService implements LightningWalletService {
   }
 }
 
-/*extension U8Array32X on U8Array32 {
+extension U8Array32X on U8Array32 {
   String get hexCode =>
       map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
-}*/
+}
+
+extension StringX on String {
+  U8Array32 toU8Array32() {
+    return U8Array32(Uint8List.fromList(hex.decode(this)));
+  }
+}

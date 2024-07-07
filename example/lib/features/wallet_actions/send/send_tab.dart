@@ -2,13 +2,12 @@ import 'package:example/constants/app_sizes.dart';
 import 'package:example/features/wallet_actions/send/send_controller.dart';
 import 'package:example/features/wallet_actions/send/send_state.dart';
 import 'package:example/services/lightning_wallet_service.dart';
-import 'package:example/widgets/wallets/wallet_selection_field.dart';
 import 'package:flutter/material.dart';
 
 class SendTab extends StatefulWidget {
-  const SendTab({required this.walletServices, super.key});
+  const SendTab({required this.walletService, super.key});
 
-  final List<LightningWalletService> walletServices;
+  final LightningWalletService walletService;
 
   @override
   SendTabState createState() => SendTabState();
@@ -25,7 +24,7 @@ class SendTabState extends State<SendTab> {
     _controller = SendController(
       getState: () => _state,
       updateState: (SendState state) => setState(() => _state = state),
-      walletServices: widget.walletServices,
+      walletService: widget.walletService,
     );
   }
 
@@ -36,17 +35,6 @@ class SendTabState extends State<SendTab> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: AppSizes.kSpacingUnit * 2),
-
-        _state.availableWallets.length > 1
-            ? WalletSelectionField(
-                selectedWallet: _state.selectedWallet,
-                availableWallets: _state.availableWallets,
-                onLightningNodeImplementationChange:
-                    _controller.onLightningNodeImplementationChange,
-                helpText: 'The wallet to send funds from.',
-              )
-            : const SizedBox.shrink(),
-        const SizedBox(height: AppSizes.kSpacingUnit * 2),
         // Amount Field
         SizedBox(
           width: 250,
@@ -56,7 +44,7 @@ class SendTabState extends State<SendTab> {
               border: OutlineInputBorder(),
               labelText: 'Amount (optional)',
               hintText: '0',
-              helperText: 'The amount you want to send in BTC.',
+              helperText: 'The amount of sats to send.',
             ),
             onChanged: _controller.amountChangeHandler,
           ),

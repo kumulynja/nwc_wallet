@@ -1,7 +1,6 @@
 import 'package:example/constants/app_sizes.dart';
 import 'package:example/view_models/wallet_balance_view_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 class WalletBalanceCard extends StatelessWidget {
   const WalletBalanceCard(
@@ -9,13 +8,11 @@ class WalletBalanceCard extends StatelessWidget {
     super.key,
     required this.onDelete,
     required this.onTap,
-    required this.isSelected,
   });
 
   final WalletBalanceViewModel walletBalance;
   final VoidCallback onDelete;
   final VoidCallback onTap;
-  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +36,7 @@ class WalletBalanceCard extends StatelessWidget {
                   height: AppSizes.kSpacingUnit * 12,
                   width: double.infinity,
                   color: theme.colorScheme.surface,
-                  child: Image.asset(
-                      walletBalance.lightningNodeImplementation.logoPath,
+                  child: Image.asset('assets/logos/ldk_node.png',
                       fit: BoxFit
                           .contain // This will make the image fit the container, but it will not stretch it
                       ),
@@ -53,21 +49,10 @@ class WalletBalanceCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          walletBalance.lightningNodeImplementation.label,
-                          style: theme.textTheme.labelMedium,
-                        ),
-                        const SizedBox(height: AppSizes.kSpacingUnit),
-                        Text(
-                          '${walletBalance.balanceBtc} BTC',
+                          '${walletBalance.balanceSat} SAT',
                           style: theme.textTheme.bodyMedium,
                         ),
                         const Spacer(),
-                        if (isSelected)
-                          Container(
-                            height: AppSizes.kSpacingUnit / 2,
-                            width: double.infinity,
-                            color: theme.colorScheme.onSurface,
-                          ),
                       ],
                     ),
                   ),

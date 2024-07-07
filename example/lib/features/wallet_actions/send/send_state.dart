@@ -1,12 +1,9 @@
-import 'package:example/enums/lightning_node_implementation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
 @immutable
 class SendState extends Equatable {
   const SendState({
-    this.selectedWallet,
-    this.availableWallets = const [],
     this.amountSat,
     this.invoice,
     this.satPerVbyte,
@@ -16,8 +13,6 @@ class SendState extends Equatable {
     this.txId,
   });
 
-  final LightningNodeImplementation? selectedWallet;
-  final List<LightningNodeImplementation> availableWallets;
   final int? amountSat;
   final String? invoice;
   final double? satPerVbyte;
@@ -35,8 +30,6 @@ class SendState extends Equatable {
   }
 
   SendState copyWith({
-    LightningNodeImplementation? selectedWallet,
-    List<LightningNodeImplementation>? availableWallets,
     int? amountSat,
     bool? clearAmountSat,
     String? invoice,
@@ -48,8 +41,6 @@ class SendState extends Equatable {
     String? txId,
   }) {
     return SendState(
-      selectedWallet: selectedWallet ?? this.selectedWallet,
-      availableWallets: availableWallets ?? this.availableWallets,
       amountSat: clearAmountSat == true ? null : amountSat ?? this.amountSat,
       invoice: invoice ?? this.invoice,
       satPerVbyte: satPerVbyte ?? this.satPerVbyte,
@@ -70,8 +61,6 @@ class SendState extends Equatable {
 
   @override
   List<Object?> get props => [
-        selectedWallet,
-        availableWallets,
         amountSat,
         invoice,
         satPerVbyte,

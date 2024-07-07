@@ -1,35 +1,18 @@
-import 'package:example/enums/lightning_node_implementation.dart';
 import 'package:example/features/wallet_actions/send/send_state.dart';
 import 'package:example/services/lightning_wallet_service.dart';
 
 class SendController {
   final SendState Function() _getState;
   final Function(SendState state) _updateState;
-  final List<LightningWalletService> _walletServices;
+  final LightningWalletService _walletService;
 
   SendController({
     required getState,
     required updateState,
-    required walletServices,
+    required walletService,
   })  : _getState = getState,
         _updateState = updateState,
-        _walletServices = walletServices {
-    // Check which wallet service has a wallet and set the wallet type
-    final availableWallets = _walletServices
-        .where((service) => service.hasWallet)
-        .map((service) => service.lightningNodeImplementation)
-        .toList();
-    _updateState(_getState().copyWith(
-      selectedWallet: availableWallets.first,
-      availableWallets: availableWallets,
-    ));
-  }
-
-  void onLightningNodeImplementationChange(
-    LightningNodeImplementation selectedWallet,
-  ) {
-    _updateState(_getState().copyWith(selectedWallet: selectedWallet));
-  }
+        _walletService = walletService;
 
   void amountChangeHandler(String? amount) async {
     final state = _getState();
@@ -37,11 +20,8 @@ class SendController {
       if (amount == null || amount.isEmpty) {
         _updateState(state.copyWith(clearAmountSat: true, clearError: true));
       } else {
-        final amountBtc = double.parse(amount);
-        final int amountSat = (amountBtc * 100000000).round();
-
-        if (amountSat >
-            await _selectedLightningWalletService.spendableBalanceSat) {
+        final amountSat = int.parse(amount);
+        if (amountSat > await _walletService.spendableBalanceSat) {
           _updateState(state.copyWith(
             error: NotEnoughFundsException(),
           ));
@@ -65,16 +45,12 @@ class SendController {
     }
   }
 
-  void feeRateChangeHandler(double feeRate) {
-    _updateState(_getState().copyWith(satPerVbyte: feeRate));
-  }
-
   Future<void> makePayment() async {
     final state = _getState();
     try {
       _updateState(state.copyWith(isMakingPayment: true));
 
-      final txId = await _selectedLightningWalletService.pay(
+      final txId = await _walletService.pay(
         state.invoice!,
         amountSat: state.amountSat,
         satPerVbyte: state.satPerVbyte,
@@ -92,13 +68,6 @@ class SendController {
       ));
     }
   }
-
-  LightningWalletService get _selectedLightningWalletService {
-    final selectedWallet = _getState().selectedWallet;
-    return _walletServices.firstWhere(
-      (service) => service.lightningNodeImplementation == selectedWallet,
-    );
-  }
 }
 
 class InvalidAmountException implements Exception {}
@@ -106,5 +75,3 @@ class InvalidAmountException implements Exception {}
 class NotEnoughFundsException implements Exception {}
 
 class PaymentException implements Exception {}
-
-class FeeRecommendationNotAvailableException implements Exception {}

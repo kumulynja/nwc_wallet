@@ -38,8 +38,10 @@ class NostrRelayProviderImpl implements NostrRelayProvider {
       final message = NostrRelayMessage.fromSerialized(data);
       _messageController.add(message);
     }, onError: (error) {
+      debugPrint('Error listening to relay messages: $error');
       _messageController.addError(error);
     }, onDone: () {
+      debugPrint('Relay messages subscription done');
       // Todo: Make custom error for this
       _messageController.addError('Connection lost');
     });

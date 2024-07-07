@@ -6,11 +6,11 @@ import 'package:flutter/material.dart';
 
 class WalletActionsBottomSheet extends StatelessWidget {
   const WalletActionsBottomSheet({
-    required List<LightningWalletService> walletServices,
+    required LightningWalletService walletService,
     super.key,
-  }) : _walletServices = walletServices;
+  }) : _walletService = walletService;
 
-  final List<LightningWalletService> _walletServices;
+  final LightningWalletService _walletService;
 
   static const List<Tab> actionTabs = <Tab>[
     Tab(
@@ -43,10 +43,10 @@ class WalletActionsBottomSheet extends StatelessWidget {
           child: TabBarView(
             children: [
               ReceiveTab(
-                walletServices: _walletServices,
+                walletService: _walletService,
               ),
               SendTab(
-                walletServices: _walletServices,
+                walletService: _walletService,
               ),
             ],
           ),

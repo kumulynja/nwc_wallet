@@ -1,6 +1,6 @@
-import 'package:example/enums/lightning_node_implementation.dart';
 import 'package:example/features/home/home_state.dart';
 import 'package:example/services/lightning_wallet_service.dart';
+import 'package:example/services/nwc_wallet_service.dart';
 import 'package:example/view_models/reserved_amounts_list_item_view_model.dart';
 import 'package:example/view_models/transactions_list_item_view_model.dart';
 import 'package:example/view_models/wallet_balance_view_model.dart';
@@ -8,63 +8,44 @@ import 'package:example/view_models/wallet_balance_view_model.dart';
 class HomeController {
   final HomeState Function() _getState;
   final Function(HomeState state) _updateState;
-  final List<LightningWalletService> _walletServices;
+  final LightningWalletService _walletService;
+  final NwcWalletService _nwcWalletService;
 
   HomeController({
     required getState,
     required updateState,
-    required walletServices,
+    required walletService,
+    required nwcWalletService,
   })  : _getState = getState,
         _updateState = updateState,
-        _walletServices = walletServices;
+        _walletService = walletService,
+        _nwcWalletService = nwcWalletService;
 
   Future<void> init() async {
-    final walletBalances = <WalletBalanceViewModel>[];
-    final transactionLists = <List<TransactionsListItemViewModel>?>[];
-    final reservedAmountsLists = <List<ReservedAmountsListItemViewModel>?>[];
-    for (int i = 0; i < _walletServices.length; i++) {
-      final service = _walletServices[i];
-      walletBalances.add(
-        WalletBalanceViewModel(
-          lightningNodeImplementation: service.lightningNodeImplementation,
-          balanceSat:
-              service.hasWallet ? await service.spendableBalanceSat : null,
-        ),
-      );
-      transactionLists.add(
-        service.hasWallet ? await _getTransactions(service) : null,
-      );
-      reservedAmountsLists.add(
-        service.hasWallet ? await _getReservedAmounts(service) : null,
-      );
-    }
-
     _updateState(_getState().copyWith(
-      walletBalances: walletBalances,
-      transactionLists: transactionLists,
-      reservedAmountsLists: reservedAmountsLists,
+      walletBalance: WalletBalanceViewModel(
+        balanceSat: _walletService.hasWallet
+            ? await _walletService.spendableBalanceSat
+            : null,
+      ),
+      transactionList: _walletService.hasWallet ? await _getTransactions() : [],
+      reservedAmountsList:
+          _walletService.hasWallet ? await _getReservedAmounts() : null,
     ));
   }
 
-  Future<void> addNewWallet(
-      LightningNodeImplementation lightningNodeImplementation) async {
-    final walletIndex = _walletServices.indexWhere(
-      (service) =>
-          service.lightningNodeImplementation == lightningNodeImplementation,
-    );
-    final walletService = _walletServices[walletIndex];
+  Future<void> addNewWallet() async {
     final state = _getState();
     try {
-      await walletService.addWallet();
+      await _walletService.addWallet();
+      // Now that a lightning wallet is created,
+      //  the Nwc wallet service can also be initialized
+      await _nwcWalletService.init();
       _updateState(
         state.copyWith(
-          walletBalances: state.walletBalances
-            ..[walletIndex] = WalletBalanceViewModel(
-              lightningNodeImplementation:
-                  walletService.lightningNodeImplementation,
-              balanceSat: await walletService.spendableBalanceSat,
-            ),
-          walletIndex: walletIndex,
+          walletBalance: WalletBalanceViewModel(
+            balanceSat: await _walletService.spendableBalanceSat,
+          ),
         ),
       );
     } catch (e) {
@@ -72,21 +53,17 @@ class HomeController {
     }
   }
 
-  Future<void> deleteWallet(int index) async {
+  Future<void> deleteWallet() async {
     try {
-      await _walletServices[index].deleteWallet();
+      await _walletService.deleteWallet();
       final state = _getState();
       _updateState(
         state.copyWith(
-          walletBalances: state.walletBalances
-            ..[index] = WalletBalanceViewModel(
-              lightningNodeImplementation:
-                  state.walletBalances[index].lightningNodeImplementation,
-              balanceSat: null,
-            ),
-          transactionLists: state.transactionLists..[index] = null,
-          reservedAmountsLists: state.reservedAmountsLists..[index] = null,
-          walletIndex: index - 1 < 0 ? 0 : index - 1,
+          walletBalance: const WalletBalanceViewModel(
+            balanceSat: null,
+          ),
+          transactionList: null,
+          reservedAmountsList: null,
         ),
       );
     } catch (e) {
@@ -97,23 +74,16 @@ class HomeController {
   Future<void> refresh() async {
     try {
       final state = _getState();
-      final walletService = _walletServices[state.walletIndex];
-      if (walletService.hasWallet) {
-        await walletService.sync();
-        final balance = await walletService.spendableBalanceSat;
+      if (_walletService.hasWallet) {
+        await _walletService.sync();
+        final balance = await _walletService.spendableBalanceSat;
         _updateState(
           state.copyWith(
-            walletBalances: state.walletBalances
-              ..[state.walletIndex] = WalletBalanceViewModel(
-                lightningNodeImplementation: state
-                    .walletBalances[state.walletIndex]
-                    .lightningNodeImplementation,
-                balanceSat: balance,
-              ),
-            transactionLists: state.transactionLists
-              ..[state.walletIndex] = await _getTransactions(walletService),
-            reservedAmountsLists: state.reservedAmountsLists
-              ..[state.walletIndex] = await _getReservedAmounts(walletService),
+            walletBalance: WalletBalanceViewModel(
+              balanceSat: balance,
+            ),
+            transactionList: await _getTransactions(),
+            reservedAmountsList: await _getReservedAmounts(),
           ),
         );
       }
@@ -123,15 +93,9 @@ class HomeController {
     }
   }
 
-  void selectWallet(int index) {
-    _updateState(_getState().copyWith(walletIndex: index));
-  }
-
-  Future<List<TransactionsListItemViewModel>> _getTransactions(
-    LightningWalletService wallet,
-  ) async {
+  Future<List<TransactionsListItemViewModel>> _getTransactions() async {
     // Get transaction entities from the wallet
-    final transactionEntities = await wallet.getTransactions();
+    final transactionEntities = await _walletService.getTransactions();
     // Map transaction entities to view models
     final transactions = transactionEntities
         .map((entity) =>
@@ -153,12 +117,11 @@ class HomeController {
     return transactions;
   }
 
-  Future<List<ReservedAmountsListItemViewModel>> _getReservedAmounts(
-    LightningWalletService wallet,
-  ) async {
+  Future<List<ReservedAmountsListItemViewModel>> _getReservedAmounts() async {
     final List<ReservedAmountsListItemViewModel> reservedAmounts = [];
-    final spendableOnChainBalanceSat = await wallet.spendableOnChainBalanceSat;
-    final totalOnChainBalanceSat = await wallet.totalOnChainBalanceSat;
+    final spendableOnChainBalanceSat =
+        await _walletService.spendableOnChainBalanceSat;
+    final totalOnChainBalanceSat = await _walletService.totalOnChainBalanceSat;
 
     if (spendableOnChainBalanceSat > 0) {
       reservedAmounts.add(

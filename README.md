@@ -260,7 +260,7 @@ println('Connection added with id: ${connection.pubkey} and URI: ${connection.ur
 
 The `addConnection` method returns the created connection with the pubkey, URI and permitted methods. You should store this connection in your app's secure storage mechanism to use it in the future when the app is restarted.
 Also let the user enter a readable name, spending limit(s), approval logic and the expiry date for the connection and store this data as well, so you can validate it when handling requests.
-The URI should be shown and copied by the user to enter it in the website, platform, app or any NWC-enabled service they want to connect its wallet to.
+The URI should be shown and copied by the user to enter it in the website, platform, app or any NWC-enabled service they want to connect its wallet to. The URI itself should not be persisted by your app after the user has copied it.
 
 ## WIP
 

@@ -206,8 +206,8 @@ class NwcWallet {
     required int amountSat,
     required int feesPaidSat,
     required int createdAt,
-    required int expiresAt,
-    required int settledAt,
+    int? expiresAt,
+    int? settledAt,
     required Map<dynamic, dynamic> metadata,
   }) async {
     final response = NwcResponse.nwcLookupInvoiceResponse(

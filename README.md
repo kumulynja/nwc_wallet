@@ -32,14 +32,11 @@ This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lig
 
 - It does not persist the wallet service's Nostr keypair or the created NWC connections between app restarts
 
-Since you are building a wallet, you certainly already have your own secure storage mechanism in place.
-It is recommended to not only use a secure form of storage for the private key, but also for the The NWC connections (URI and permitted methods) since the URI contains the secret key of the connection.
-As an id to store the connection by, you can use its pubkey, which is the public key related to its secret key. You could let the user set a readable name for the connection, but as an id to store the connection by, you should use the pubkey, since the pubkey is the only way to identify the connection in the NWC protocol.
-When the app is restarted, you should pass the stored keypair and the connections to the `NwcWallet` constructor to continue using the same keypair and connections.
+Since you are building a wallet, you certainly already have your own secure storage mechanism in place to store the user's private keys or mnemonic. That's why we leave the storage of the Nostr keypair to you, and keep the library storage-agnostic. The same goes for the connections. You should persist the connections yourself so they stay alive between app restarts. As an id to store the connection by, you can use its pubkey, which is the public key related to its secret key and the way to identify the connection in the NWC protocol. To make it easier for the user to know which connection is which, you could also let the user set a readable name for the connection and store it as well. The permitted methods should also be persisted with the connection. When the app is restarted, you should pass the stored keypair and the connections to the `NwcWallet` constructor to continue using the same keypair and connections.
 
 - It does not set or verify any budget limits, auto- or manual approvals or expiry date for the NWC connections
 
-Together with the connection data like the name, URI and permitted methods, you should also save spending limits (budgets) and an expiry date for every connection. You could also let the user configure auto- or manual approval for payment requests. It is your responsability as a wallet builder to validate those settings when handling a request from the stream. The expiry date should be checked when handling any NWC requests and the budget and other limits before making a payment. If the expiry date or any budget limits are reached, you should use the `failedToHandleRequest` function and pass the appropriate error code. In case a connection is expired, also remove the connection with `removeConnection` so no further requests will be put on the stream for this connection anymore.
+Together with the connection data like the name and permitted methods, you should also save spending limits (budgets) and an expiry date for every connection. You could also let the user configure auto- or manual approval for payment requests. It is your responsability as a wallet builder to validate those settings when handling a request from the stream. The expiry date should be checked when handling any NWC requests and the budget and other limits before making a payment. If the expiry date or any budget limits are reached, you should use the `failedToHandleRequest` function and pass the appropriate error code. In case a connection is expired, also remove the connection with `removeConnection` so no further requests will be put on the stream for this connection anymore.
 
 - It does not store the requests, they are only available in real-time through the stream
 
@@ -66,7 +63,7 @@ dependencies:
 
 ## Usage
 
-Next, you can follow the steps below to integrate the package into your app:
+Next, you can follow the steps below to integrate Nostr Wallet Connect into your app:
 
 ### 1. Generate or import a Nostr keypair for the wallet service\*
 
@@ -90,6 +87,13 @@ final nostrKeyPair = NostrKeyPair.fromNsec('your_nsec_here');
 ```
 
 You should persist the private key in your app's secure storage to be able to use the same keypair between app restarts.
+
+Since a Lightning Wallet normally has a mnemonic already that is stored securely, you could also derive a Nostr keypair from the mnemonic. This way you can use the same mnemonic for the Lightning wallet and NWC. This is a more secure way, as you don't have to store the private key separately and you can always restore the private key for NWC from the mnemonic.
+
+```dart
+// Derive a Nostr keypair from a mnemonic
+final nostrKeyPair = NostrKeyPair.fromMnemonic('your_mnemonic_here');
+```
 
 \* I recommend not using the same keypair of a user's Nostr profile (social media or others) for the wallet service. Generate or import a separate keypair used ONLY for NWC. Otherwise the apps you connect with can link your profile/identity with your wallet info and with the payments you make for their connection. This is a privacy concern and can be avoided by using a separate keypair for the wallet service.
 
@@ -256,6 +260,7 @@ println('Connection added with id: ${connection.pubkey} and URI: ${connection.ur
 
 The `addConnection` method returns the created connection with the pubkey, URI and permitted methods. You should store this connection in your app's secure storage mechanism to use it in the future when the app is restarted.
 Also let the user enter a readable name, spending limit(s), approval logic and the expiry date for the connection and store this data as well, so you can validate it when handling requests.
+The URI should be shown and copied by the user to enter it in the website, platform, app or any NWC-enabled service they want to connect its wallet to. The URI itself should not be persisted by your app after the user has copied it.
 
 ## WIP
 
@@ -274,7 +279,7 @@ And if you feel like contributing, pull requests are very welcome as well.
 
 ## Credits
 
-Other Nostr Flutter packages have been helpful in the development of this package and some code snippets were borrowed from them. Special thanks to the developers of these packages:
+Other Nostr Flutter packages have been helpful in the development of this package and some code snippets were borrowed from them. A big thanks to the developers of these packages:
 
 - https://github.com/anasfik/nostr for the bech32 encoding and decoding code.
 - https://github.com/ethicnology/dart-nostr for the nip04 encryption and decryption code.

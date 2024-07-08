@@ -17,6 +17,10 @@ This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lig
 
 [![NWC Infogram](https://github.com/kumulynja/nwc_wallet/assets/92805150/54bb7ec1-41fa-4bb5-b032-288bff9b77c1)](https://nwc.dev)
 
+## Demo
+
+https://github.com/kumulynja/nwc_wallet/assets/92805150/4bbbbb87-8734-4ffa-ac78-1b01ff8d2c46
+
 ## What does this package do for you?
 
 - It lets you generate or restore a Nostr keypair for the wallet

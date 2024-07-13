@@ -17,6 +17,10 @@ This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lig
 
 [![NWC Infogram](https://github.com/kumulynja/nwc_wallet/assets/92805150/54bb7ec1-41fa-4bb5-b032-288bff9b77c1)](https://nwc.dev)
 
+## Demo
+
+https://github.com/kumulynja/nwc_wallet/assets/92805150/4bbbbb87-8734-4ffa-ac78-1b01ff8d2c46
+
 > :warning: **Basic functionality should work, but no guarantees yet**: This package is still a work in progress and has not been thoroughly tested yet. If you want to help test it, please do so and report any issues you encounter.
 
 ## What does this package do for you?
@@ -303,7 +307,7 @@ All basic functionality of the NWC protocol is implemented and working in this p
 Feel free to open an issue for any suggestions to improve or if you encounter any other problems or limitations that should be addressed.
 And if you feel like contributing, pull requests are very welcome as well.
 
-## Credits
+## Acknowledgements
 
 Other Nostr Flutter packages have been helpful in the development of this package and some code snippets were borrowed from them. A big thanks to the developers of these packages:
 

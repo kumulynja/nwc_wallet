@@ -22,8 +22,11 @@ class NostrKeyPair extends Equatable {
     return NostrKeyPair(privateKey: privateKey);
   }
 
-  factory NostrKeyPair.fromMnemonic(String mnemonic) {
-    final privateKey = Nip06.mnemonicToPrivateKey(mnemonic);
+  factory NostrKeyPair.fromMnemonic(String mnemonic, {int accountIndex = 0}) {
+    final privateKey = Nip06.mnemonicToPrivateKey(
+      mnemonic,
+      accountIndex: accountIndex,
+    );
     return NostrKeyPair(privateKey: privateKey);
   }
 

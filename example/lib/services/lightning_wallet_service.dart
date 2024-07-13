@@ -377,8 +377,9 @@ class LdkNodeLightningWalletService implements LightningWalletService {
       throw NoWalletException('A Lightning node has to be initialized first!');
     }
 
+    final bytesArray = id.toU8Array32();
     final payment = await _node!.payment(
-      paymentId: PaymentId(field0: id.toU8Array32()),
+      paymentId: PaymentId(field0: bytesArray),
     );
 
     if (payment == null) {

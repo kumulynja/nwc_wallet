@@ -21,6 +21,8 @@ This package takes care of the [wallet service](https://docs.nwc.dev/bitcoin-lig
 
 https://github.com/kumulynja/nwc_wallet/assets/92805150/4bbbbb87-8734-4ffa-ac78-1b01ff8d2c46
 
+> :warning: **Basic functionality should work, but no guarantees yet**: This package is still a work in progress and has not been thoroughly tested yet. If you want to help test it, please do so and report any issues you encounter.
+
 ## What does this package do for you?
 
 - It lets you generate or restore a Nostr keypair for the wallet
@@ -52,17 +54,21 @@ To use this package, your app should already have a Lightning Network node or wa
 
 ## Getting started
 
+<!--
 Install `nwc_wallet` as a dependency in your Flutter wallet app.
 
 ```bash
 flutter pub add nwc_wallet
-```
+``` -->
 
-or add it to your `pubspec.yaml` file:
+Currently, the package is not yet released on pub.dev, so you have to add it as a git dependency in your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  nwc_wallet: /*latest version*/
+  nwc_wallet:
+    git:
+      url: https://github.com/kumulynja/nwc_wallet
+      ref: main
 ```
 
 ## Usage
@@ -92,14 +98,24 @@ final nostrKeyPair = NostrKeyPair.fromNsec('your_nsec_here');
 
 You should persist the private key in your app's secure storage to be able to use the same keypair between app restarts.
 
-Since a Lightning Wallet normally has a mnemonic already that is stored securely, you could also derive a Nostr keypair from the mnemonic. This way you can use the same mnemonic for the Lightning wallet and NWC. This is a more secure way, as you don't have to store the private key separately and you can always restore the private key for NWC from the mnemonic.
+Since a Lightning Wallet normally has a mnemonic already that is stored securely, you could also derive a Nostr keypair from the mnemonic following [NIP06](https://github.com/nostr-protocol/nips/blob/master/06.md). This way you can use the same mnemonic for the Lightning wallet and NWC. This is a more secure way, as you don't have to store the private key separately and you can always restore the private key for NWC from the mnemonic.
 
 ```dart
 // Derive a Nostr keypair from a mnemonic
 final nostrKeyPair = NostrKeyPair.fromMnemonic('your_mnemonic_here');
 ```
 
-\* I recommend not using the same keypair of a user's Nostr profile (social media or others) for the wallet service. Generate or import a separate keypair used ONLY for NWC. Otherwise the apps you connect with can link your profile/identity with your wallet info and with the payments you make for their connection. This is a privacy concern and can be avoided by using a separate keypair for the wallet service.
+To derive different keypairs from the same mnemonic, you can use the account index parameter.
+
+```dart
+// Derive a Nostr keypair from a mnemonic with an account index
+final nostrKeyPair = NostrKeyPair.fromMnemonic(
+    'your_mnemonic_here',
+    accountIndex: 1,
+);
+```
+
+\* If your wallet also offers any other Nostr functionality, like a user profile and already has a keypair for that, do NOT use that same keypair for the wallet service for Nostr Wallet Connect, since the apps you connect to will be able to link your payments with your Nostr identity. Every wallet should have its own identity, and thus keypair, independent of the user's Nostr profile. What you can do though, is use the same mnemonic to derive both keypairs from, each with a different account index as shown above. For example the Nostr profile keypair could be derived from the mnemonic with account index 0 and the wallet service keypair with account index 1.
 
 ### 2. Initialize an `NwcWallet` instance
 
@@ -266,6 +282,16 @@ The `addConnection` method returns the created connection with the pubkey, URI a
 Also let the user enter a readable name, spending limit(s), approval logic and the expiry date for the connection and store this data as well, so you can validate it when handling requests.
 The URI should be shown and copied by the user to enter it in the website, platform, app or any NWC-enabled service they want to connect its wallet to. The URI itself should not be persisted by your app after the user has copied it.
 
+## Example
+
+You can find a full example of how to use this package in the [example](./example/) folder. It uses the [ldk-node-flutter](https://github.com/LtbLightning/ldk-node-flutter) package to run a Lightning node on mobile and handle the NWC requests, but any other Lightning wallet or node can be used as well. So, if you already have a working Lightning wallet app, the main file to look at in the example would be [`nwc_wallet_service.dart`](example/lib/services/nwc_wallet_service.dart). This is where the keypair is generated, the `NwcWallet` class is initialized, connections are added and requests are handled. This is the main code you would need to write yourself too when using this package, using your own wallet's methods to handle the NWC requests. Then just hook it up with the UI of your app and you've got a Lightning wallet that is compatible with Nostr Wallet Connect in no time.
+
+## Why this package may be what you are looking for
+
+- **Easy to use**: This package is built with simplicity in mind. It provides a small and simple API to support Nostr Wallet Connect in your app, so you can focus on building your wallet and not on Nostr protocol details.
+- **Well scoped & flexible**: Only NIP's needed for the wallet side of Nostr Wallet Connect are implemented in this package. Nostr Wallet Connect having a separate keypair for the wallet and a dedicated relay for NWC connections is a good reason to keep it separate from other Nostr functionalities. This makes it lightweight and also easier to maintain and for you to review. You can still add profile, contacts, social media and other Nostr functionalities with other Nostr packages though, they can run independently from this package and vice versa.
+- **Lightning node agnostic**: This package does not depend on any specific Lightning node implementation. You can use any Lightning wallet or node that you want to handle the NWC requests. This makes it possible to integrate into any existing wallet app built with Flutter.
+
 ## WIP
 
 All basic functionality of the NWC protocol is implemented and working in this package, so you should already be able to use it in your app to make it compatible with NWC apps. But software is never finished, so be aware that following things should still be added or improved upon in future versions:
@@ -281,7 +307,7 @@ All basic functionality of the NWC protocol is implemented and working in this p
 Feel free to open an issue for any suggestions to improve or if you encounter any other problems or limitations that should be addressed.
 And if you feel like contributing, pull requests are very welcome as well.
 
-## Credits
+## Acknowledgements
 
 Other Nostr Flutter packages have been helpful in the development of this package and some code snippets were borrowed from them. A big thanks to the developers of these packages:
 

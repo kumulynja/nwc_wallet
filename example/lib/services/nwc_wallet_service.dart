@@ -287,6 +287,9 @@ class NwcWalletServiceImpl implements NwcWalletService {
         throw FailedToPayInvoiceException('Failed to pay invoice');
       }
 
+      // Wait a bit for the payment to be processed and be available in the list of transactions
+      await Future.delayed(const Duration(seconds: 2));
+
       final paymentDetails =
           await _lightningWalletService.getTransactionById(hash);
 

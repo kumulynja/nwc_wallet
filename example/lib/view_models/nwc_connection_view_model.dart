@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:nwc_wallet/enums/nwc_method.dart';
+import 'package:nwc_wallet/nwc_wallet.dart';
 
 @immutable
 class NwcConnectionViewModel extends Equatable {

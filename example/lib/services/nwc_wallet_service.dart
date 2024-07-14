@@ -5,7 +5,6 @@ import 'package:example/entities/nwc_connection_entity.dart';
 import 'package:example/repositories/mnemonic_repository.dart';
 import 'package:example/services/lightning_wallet_service.dart';
 import 'package:flutter/material.dart';
-import 'package:nwc_wallet/data/models/nwc_request.dart';
 import 'package:nwc_wallet/nwc_wallet.dart';
 
 abstract class NwcWalletService {

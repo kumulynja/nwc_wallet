@@ -6,7 +6,20 @@ export 'enums/transaction_type.dart' show TransactionType;
 export 'enums/bitcoin_network.dart' show BitcoinNetwork;
 export 'data/models/nostr_key_pair.dart' show NostrKeyPair;
 export 'data/models/transaction.dart' show Transaction;
+export 'data/models/tlv_record.dart' show TlvRecord;
 export 'data/models/nwc_connection.dart' show NwcConnection;
+export 'data/models/nwc_request.dart'
+    show
+        NwcRequest,
+        NwcGetInfoRequest,
+        NwcGetBalanceRequest,
+        NwcMakeInvoiceRequest,
+        NwcPayInvoiceRequest,
+        NwcMultiPayInvoiceRequest,
+        NwcPayKeysendRequest,
+        NwcMultiPayKeysendRequest,
+        NwcLookupInvoiceRequest,
+        NwcListTransactionsRequest;
 
 import 'package:flutter/foundation.dart';
 import 'package:nwc_wallet/constants/app_configs.dart';

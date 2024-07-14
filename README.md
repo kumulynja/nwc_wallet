@@ -297,12 +297,14 @@ You can find a full example of how to use this package in the [example](./exampl
 All basic functionality of the NWC protocol is implemented and working in this package, so you should already be able to use it in your app to make it compatible with NWC apps. But software is never finished, so be aware that following things should still be added or improved upon in future versions:
 
 - [ ] Missed events handling
-- [ ] Connection monitoring
+- [ ] Retry sending messages
+- [ ] Expose websocket connection to reuse for other Nostr functionalities
 - [ ] Updating permitted methods of a connection
-- [ ] Status checks
+- [ ] Connection status checks
 - [ ] Custom exceptions
 - [ ] More tests
 - [ ] More documentation
+- [ ] Make websocket connection a parameter of the NwcWallet constructor
 
 Feel free to open an issue for any suggestions to improve or if you encounter any other problems or limitations that should be addressed.
 And if you feel like contributing, pull requests are very welcome as well.

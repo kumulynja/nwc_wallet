@@ -52,10 +52,11 @@ packages:
   bolt11_decoder:
     dependency: "direct main"
     description:
-      name: bolt11_decoder
-      sha256: ce3c4e4311e84c7b6ceb06ffbf84329bf6bdac1244ecfa1fc157c46038021bbc
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: fix-signet-prefix
+      resolved-ref: "554069731f6eba5977c3a9b1227c55bbd17c7d79"
+      url: "https://github.com/kumulynja/dart_bolt11_decoder"
+    source: git
     version: "1.0.2"
   boolean_selector:
     dependency: transitive

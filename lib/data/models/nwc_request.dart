@@ -7,7 +7,6 @@ import 'package:nwc_wallet/data/models/tlv_record.dart';
 import 'package:nwc_wallet/enums/nwc_method.dart';
 import 'package:nwc_wallet/enums/transaction_type.dart';
 import 'package:nwc_wallet/nips/nip04.dart';
-import 'package:nwc_wallet/nwc_wallet.dart';
 
 // Abstract base class for messages from relay to client
 @immutable
@@ -55,7 +54,7 @@ abstract class NwcRequest extends Equatable {
         return NwcMakeInvoiceRequest(
           id: event.id!,
           connectionPubkey: connectionPubkey,
-          amount: params['amount'] as int,
+          amountMsat: params['amount'] as int,
           description: params['description'] as String?,
           descriptionHash: params['descriptionHash'] as String?,
           expiry: params['expiry'] as int?,
@@ -167,24 +166,25 @@ class NwcGetBalanceRequest extends NwcRequest {
 // Subclass for requests to make a bolt11 invoice
 @immutable
 class NwcMakeInvoiceRequest extends NwcRequest {
-  final int amount;
+  final int amountSat;
   final String? description;
   final String? descriptionHash;
   final int? expiry;
 
   const NwcMakeInvoiceRequest({
-    required this.amount,
+    required amountMsat,
     this.description,
     this.descriptionHash,
     this.expiry,
     required super.id,
     required super.connectionPubkey,
-  }) : super(method: NwcMethod.makeInvoice);
+  })  : amountSat = amountMsat ~/ 1000,
+        super(method: NwcMethod.makeInvoice);
 
   @override
   List<Object?> get props => [
         ...super.props,
-        amount,
+        amountSat,
         description,
         descriptionHash,
         expiry,

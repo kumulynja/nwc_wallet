@@ -4,7 +4,7 @@ import 'package:bolt11_decoder/bolt11_decoder.dart';
 import 'package:example/entities/nwc_connection_entity.dart';
 import 'package:example/repositories/mnemonic_repository.dart';
 import 'package:example/services/lightning_wallet_service.dart';
-import 'package:ldk_node/ldk_node.dart';
+import 'package:flutter/material.dart';
 import 'package:nwc_wallet/data/models/nwc_request.dart';
 import 'package:nwc_wallet/nwc_wallet.dart';
 
@@ -160,8 +160,11 @@ class NwcWalletServiceImpl implements NwcWalletService {
 
   Future<void> _handleGetBalanceRequest(NwcGetBalanceRequest request) async {
     try {
+      debugPrint('NwcWalletService: Handling getBalance request');
       final balance = await _lightningWalletService.spendableBalanceSat;
+      debugPrint('NwcWalletService: Balance: $balance');
       await _nwcWallet!.getBalanceRequestHandled(request, balanceSat: balance);
+      debugPrint('NwcWalletService: getBalance request handled');
     } catch (e) {
       print('NwcWalletService: Error handling getBalance request: $e');
       await _nwcWallet!.failedToHandleRequest(
@@ -174,12 +177,12 @@ class NwcWalletServiceImpl implements NwcWalletService {
   Future<void> _handleMakeInvoiceRequest(NwcMakeInvoiceRequest request) async {
     try {
       final (_, bolt11Invoice) = await _lightningWalletService.generateInvoices(
-        amountSat: request.amount,
+        amountSat: request.amountSat,
         description: request.description,
         expirySecs: request.expiry,
       );
 
-      if (bolt11Invoice == null) {
+      if (bolt11Invoice == null || bolt11Invoice.isEmpty) {
         throw 'Failed to generate invoice';
       }
 

@@ -36,6 +36,7 @@ abstract class NwcService {
 class NwcServiceImpl implements NwcService {
   final NostrKeyPair _walletNostrKeyPair;
   final NostrRepository _nostrRepository;
+  int? _lastRequestTimestamp;
   StreamSubscription? _subscription;
   Timer? _reconnectTimer;
   int _retryCount = 0;
@@ -48,9 +49,13 @@ class NwcServiceImpl implements NwcService {
     this._walletNostrKeyPair,
     this._nostrRepository,
     List<NwcConnection> connections,
+    this._lastRequestTimestamp,
   ) {
-    for (final connection in connections) {
-      _connections[connection.pubkey] = connection;
+    if (connections.isNotEmpty) {
+      for (final connection in connections) {
+        _connections[connection.pubkey] = connection;
+      }
+      connect();
     }
   }
 
@@ -166,8 +171,7 @@ class NwcServiceImpl implements NwcService {
       [
         NostrFilters.nwcRequests(
           walletPublicKey: _walletNostrKeyPair.publicKey,
-          since: DateTime.now().millisecondsSinceEpoch ~/
-              1000, // Todo: get last event timestamp if missed events are desired, this should be a parameter
+          since: _lastRequestTimestamp,
         )
       ],
     );
@@ -225,6 +229,11 @@ class NwcServiceImpl implements NwcService {
     } catch (e) {
       debugPrint('Error handling event: $e');
       return;
+    } finally {
+      // Update the last request timestamp so at reconnect we can request events
+      //  from this timestamp and not miss any events and not replay events from
+      //  the timestamp the user passed when initializing NwcWallet either.
+      _lastRequestTimestamp = event.createdAt;
     }
   }
 

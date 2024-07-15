@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:nwc_wallet/enums/nostr_event_kind.dart';
 
 @immutable
 class NostrFilters extends Equatable {
@@ -26,6 +27,7 @@ class NostrFilters extends Equatable {
     int? since,
   }) =>
       NostrFilters(
+        kinds: [NostrEventKind.nip47Request.value],
         tags: {
           'p': [walletPublicKey]
         },

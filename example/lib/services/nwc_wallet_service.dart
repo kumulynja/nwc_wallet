@@ -31,8 +31,18 @@ class NwcWalletServiceImpl implements NwcWalletService {
   @override
   Future<void> init() async {
     NostrKeyPair? walletServiceKeypair;
-    List<NwcConnection> connections =
-        []; // Todo: get stored connections from repository
+    List<NwcConnection> connections = [
+      const NwcConnection(
+          pubkey:
+              '943551581ebf22ccf4cdd24a3db598baf181179b74bbc57a29bdb168e36d2876',
+          permittedMethods: [
+            NwcMethod.getBalance,
+            NwcMethod.getInfo,
+            NwcMethod.makeInvoice,
+            NwcMethod.lookupInvoice,
+            NwcMethod.listTransactions,
+          ])
+    ]; // Todo: get stored connections from repository
 
     final mnemonic =
         await _mnemonicRepository.getMnemonic(_lightningWalletService.alias);
@@ -42,6 +52,7 @@ class NwcWalletServiceImpl implements NwcWalletService {
       _nwcWallet = NwcWallet(
         walletNostrKeyPair: walletServiceKeypair,
         connections: connections,
+        lastRequestTimestamp: 1720998974,
       );
 
       print(
@@ -238,6 +249,10 @@ class NwcWalletServiceImpl implements NwcWalletService {
         throw InvoiceNotFoundException('Invoice not found');
       }
 
+      createdAt = createdAt ??
+          payment.timestamp ??
+          DateTime.now().millisecondsSinceEpoch ~/
+              1000; // ldk_node_flutter doesn't return timestamp
       await _nwcWallet!.lookupInvoiceRequestHandled(
         request,
         invoice: request.invoice,
@@ -245,11 +260,8 @@ class NwcWalletServiceImpl implements NwcWalletService {
         preimage: payment.preimage,
         amountSat: payment.amountSat ?? 0,
         feesPaidSat: 0,
-        createdAt: createdAt ??
-            payment.timestamp ??
-            DateTime.now().millisecondsSinceEpoch ~/
-                1000, // ldk_node_flutter doesn't return timestamp
-        expiresAt: expiry,
+        createdAt: createdAt,
+        expiresAt: createdAt + (expiry ?? 0),
         settledAt: payment.isPaid == true
             ? DateTime.now().millisecondsSinceEpoch ~/
                 1000 // ldk_node_flutter doesn't return settled timestamp

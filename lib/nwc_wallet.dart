@@ -1,5 +1,6 @@
 library nwc_wallet;
 
+// Export from other files
 export 'enums/nwc_method.dart' show NwcMethod;
 export 'enums/nwc_error_code.dart' show NwcErrorCode;
 export 'enums/transaction_type.dart' show TransactionType;
@@ -49,6 +50,7 @@ class NwcWallet {
     this._walletNostrKeyPair,
     this._relayUrl,
     List<NwcConnection> connections,
+    int? lastRequestTimestamp,
   ) {
     _nwcService = NwcServiceImpl(
       _walletNostrKeyPair,
@@ -58,6 +60,7 @@ class NwcWallet {
         ),
       ),
       connections,
+      lastRequestTimestamp,
     );
   }
 
@@ -69,8 +72,14 @@ class NwcWallet {
     required NostrKeyPair walletNostrKeyPair,
     String relayUrl = AppConfigs.defaultRelayUrl,
     List<NwcConnection> connections = const [],
+    int? lastRequestTimestamp,
   }) {
-    _instance ??= NwcWallet._(walletNostrKeyPair, relayUrl, connections);
+    _instance ??= NwcWallet._(
+      walletNostrKeyPair,
+      relayUrl,
+      connections,
+      lastRequestTimestamp,
+    );
     return _instance!;
   }
 

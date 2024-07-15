@@ -14,11 +14,13 @@ abstract class NwcRequest extends Equatable {
   final String id;
   final String connectionPubkey;
   final NwcMethod method;
+  final int createdAt;
 
   const NwcRequest({
     required this.id,
     required this.connectionPubkey,
     required this.method,
+    required this.createdAt,
   });
 
   factory NwcRequest.fromEvent(
@@ -44,11 +46,13 @@ abstract class NwcRequest extends Equatable {
         return NwcGetInfoRequest(
           id: event.id!,
           connectionPubkey: connectionPubkey,
+          createdAt: event.createdAt,
         );
       case NwcMethod.getBalance:
         return NwcGetBalanceRequest(
           id: event.id!,
           connectionPubkey: connectionPubkey,
+          createdAt: event.createdAt,
         );
       case NwcMethod.makeInvoice:
         return NwcMakeInvoiceRequest(
@@ -58,12 +62,14 @@ abstract class NwcRequest extends Equatable {
           description: params['description'] as String?,
           descriptionHash: params['descriptionHash'] as String?,
           expiry: params['expiry'] as int?,
+          createdAt: event.createdAt,
         );
       case NwcMethod.payInvoice:
         return NwcPayInvoiceRequest(
           id: event.id!,
           connectionPubkey: connectionPubkey,
           invoice: params['invoice'] as String,
+          createdAt: event.createdAt,
         );
       case NwcMethod.multiPayInvoice:
         final invoices = (params['invoices'] as List)
@@ -77,6 +83,7 @@ abstract class NwcRequest extends Equatable {
           id: event.id!,
           connectionPubkey: connectionPubkey,
           invoices: invoices,
+          createdAt: event.createdAt,
         );
       case NwcMethod.payKeysend:
         return NwcPayKeysendRequest(
@@ -88,6 +95,7 @@ abstract class NwcRequest extends Equatable {
           tlvRecords: (params['tlvRecords'] as List)
               .map((e) => TlvRecord.fromMap(e as Map<String, dynamic>))
               .toList(),
+          createdAt: event.createdAt,
         );
       case NwcMethod.multiPayKeysend:
         final keysends = (params['keysends'] as List)
@@ -105,6 +113,7 @@ abstract class NwcRequest extends Equatable {
           id: event.id!,
           connectionPubkey: connectionPubkey,
           keysends: keysends,
+          createdAt: event.createdAt,
         );
       case NwcMethod.lookupInvoice:
         return NwcLookupInvoiceRequest(
@@ -112,6 +121,7 @@ abstract class NwcRequest extends Equatable {
           connectionPubkey: connectionPubkey,
           paymentHash: params['paymentHash'] as String?,
           invoice: params['invoice'] as String?,
+          createdAt: event.createdAt,
         );
       case NwcMethod.listTransactions:
         return NwcListTransactionsRequest(
@@ -127,6 +137,7 @@ abstract class NwcRequest extends Equatable {
               : TransactionType.fromName(
                   params['type'] as String,
                 ),
+          createdAt: event.createdAt,
         );
       default:
         return NwcUnknownRequest(
@@ -134,19 +145,23 @@ abstract class NwcRequest extends Equatable {
           connectionPubkey: connectionPubkey,
           unknownMethod: method,
           params: params,
+          createdAt: event.createdAt,
         );
     }
   }
 
   @override
-  List<Object?> get props => [id, connectionPubkey, method];
+  List<Object?> get props => [id, connectionPubkey, method, createdAt];
 }
 
 // Subclass for requests to get info like supported methods
 @immutable
 class NwcGetInfoRequest extends NwcRequest {
-  const NwcGetInfoRequest({required super.id, required super.connectionPubkey})
-      : super(method: NwcMethod.getInfo);
+  const NwcGetInfoRequest({
+    required super.id,
+    required super.connectionPubkey,
+    required super.createdAt,
+  }) : super(method: NwcMethod.getInfo);
 
   @override
   List<Object?> get props => [...super.props];
@@ -155,9 +170,11 @@ class NwcGetInfoRequest extends NwcRequest {
 // Subclass for requests to get balance
 @immutable
 class NwcGetBalanceRequest extends NwcRequest {
-  const NwcGetBalanceRequest(
-      {required super.id, required super.connectionPubkey})
-      : super(method: NwcMethod.getBalance);
+  const NwcGetBalanceRequest({
+    required super.id,
+    required super.connectionPubkey,
+    required super.createdAt,
+  }) : super(method: NwcMethod.getBalance);
 
   @override
   List<Object?> get props => [...super.props];
@@ -178,6 +195,7 @@ class NwcMakeInvoiceRequest extends NwcRequest {
     this.expiry,
     required super.id,
     required super.connectionPubkey,
+    required super.createdAt,
   })  : amountSat = amountMsat ~/ 1000,
         super(method: NwcMethod.makeInvoice);
 
@@ -200,6 +218,7 @@ class NwcPayInvoiceRequest extends NwcRequest {
     required this.invoice,
     required super.id,
     required super.connectionPubkey,
+    required super.createdAt,
   }) : super(method: NwcMethod.payInvoice);
 
   @override
@@ -215,6 +234,7 @@ class NwcMultiPayInvoiceRequest extends NwcRequest {
     required this.invoices,
     required super.id,
     required super.connectionPubkey,
+    required super.createdAt,
   }) : super(method: NwcMethod.multiPayInvoice);
 
   @override
@@ -251,6 +271,7 @@ class NwcPayKeysendRequest extends NwcRequest {
     this.tlvRecords,
     required super.id,
     required super.connectionPubkey,
+    required super.createdAt,
   }) : super(method: NwcMethod.payKeysend);
 
   @override
@@ -267,6 +288,7 @@ class NwcMultiPayKeysendRequest extends NwcRequest {
     required this.keysends,
     required super.id,
     required super.connectionPubkey,
+    required super.createdAt,
   }) : super(method: NwcMethod.multiPayKeysend);
 
   @override
@@ -303,6 +325,7 @@ class NwcLookupInvoiceRequest extends NwcRequest {
     this.invoice,
     required super.id,
     required super.connectionPubkey,
+    required super.createdAt,
   }) : super(method: NwcMethod.lookupInvoice);
 
   @override
@@ -328,6 +351,7 @@ class NwcListTransactionsRequest extends NwcRequest {
     this.type,
     required super.id,
     required super.connectionPubkey,
+    required super.createdAt,
   }) : super(method: NwcMethod.listTransactions);
 
   @override
@@ -346,6 +370,7 @@ class NwcUnknownRequest extends NwcRequest {
     required this.params,
     required super.id,
     required super.connectionPubkey,
+    required super.createdAt,
   }) : super(method: NwcMethod.unknown);
 
   @override

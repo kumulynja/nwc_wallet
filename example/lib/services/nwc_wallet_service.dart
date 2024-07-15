@@ -229,45 +229,63 @@ class NwcWalletServiceImpl implements NwcWalletService {
     try {
       if (request.paymentHash == null && request.invoice == null) {
         throw 'Missing both paymentHash and invoice';
-      }
-      String? id = request.paymentHash;
-      int? expiry;
-      int? createdAt;
-      if (id == null) {
+      } else if (request.invoice != null) {
+        // Parse the invoice
         final paymentRequest = Bolt11PaymentRequest(request.invoice!);
-        id = paymentRequest.tags
+        final id = paymentRequest.tags
             .where((tag) => tag.type == 'payment_hash')
             .first
             .data;
-        createdAt = paymentRequest.timestamp.toInt();
-        expiry =
-            paymentRequest.tags.where((tag) => tag.type == 'expiry').first.data;
-      }
-      final payment = await _lightningWalletService.getTransactionById(id!);
+        final createdAt = paymentRequest.timestamp.toInt();
+        final expiryTag = paymentRequest.tags
+            .where(
+              (tag) => tag.type == 'expiry',
+            )
+            .first
+            .data as int;
+        final expiry = createdAt + expiryTag;
+        final payment = await _lightningWalletService.getTransactionById(id!);
 
-      if (payment == null) {
-        throw InvoiceNotFoundException('Invoice not found');
-      }
+        if (payment == null) {
+          throw InvoiceNotFoundException('Invoice not found');
+        }
 
-      createdAt = createdAt ??
-          payment.timestamp ??
-          DateTime.now().millisecondsSinceEpoch ~/
-              1000; // ldk_node_flutter doesn't return timestamp
-      await _nwcWallet!.lookupInvoiceRequestHandled(
-        request,
-        invoice: request.invoice,
-        paymentHash: id,
-        preimage: payment.preimage,
-        amountSat: payment.amountSat ?? 0,
-        feesPaidSat: 0,
-        createdAt: createdAt,
-        expiresAt: createdAt + (expiry ?? 0),
-        settledAt: payment.isPaid == true
-            ? DateTime.now().millisecondsSinceEpoch ~/
-                1000 // ldk_node_flutter doesn't return settled timestamp
-            : null,
-        metadata: {},
-      );
+        return _nwcWallet!.lookupInvoiceRequestHandled(
+          request,
+          invoice: request.invoice,
+          paymentHash: id,
+          preimage: payment.preimage,
+          amountSat: payment.amountSat ?? 0,
+          feesPaidSat: 0,
+          createdAt: createdAt,
+          expiresAt: expiry,
+          settledAt:
+              payment.isPaid == true ? payment.latestUpdateTimestamp : null,
+          metadata: {},
+        );
+      } else {
+        final payment = await _lightningWalletService
+            .getTransactionById(request.paymentHash!);
+
+        if (payment == null) {
+          throw InvoiceNotFoundException('Invoice not found');
+        }
+
+        await _nwcWallet!.lookupInvoiceRequestHandled(
+          request,
+          invoice: request.invoice,
+          paymentHash: request.paymentHash!,
+          preimage: payment.preimage,
+          amountSat: payment.amountSat ?? 0,
+          feesPaidSat: 0,
+          createdAt: payment.timestamp ??
+              payment
+                  .latestUpdateTimestamp, // ldk_node_flutter doesn't return timestamp of creation separately, so this might not be entirely correct
+          settledAt:
+              payment.isPaid == true ? payment.latestUpdateTimestamp : null,
+          metadata: {},
+        );
+      }
     } catch (e) {
       print('NwcWalletService: Error handling lookupInvoice request: $e');
       if (e is InvoiceNotFoundException) {

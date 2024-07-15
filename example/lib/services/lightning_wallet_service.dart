@@ -365,7 +365,7 @@ class LdkNodeLightningWalletService implements LightningWalletService {
               : direction.PaymentDirection.outgoing,
           isPaid: true,
           preimage: preimage,
-          timestamp: null,
+          latestUpdateTimestamp: payment.latestUpdateTimestamp.toInt(),
         );
       },
     ).toList();
@@ -404,6 +404,7 @@ class LdkNodeLightningWalletService implements LightningWalletService {
           : direction.PaymentDirection.outgoing,
       preimage: preimage,
       isPaid: payment.status == PaymentStatus.succeeded,
+      latestUpdateTimestamp: payment.latestUpdateTimestamp.toInt(),
     );
   }
 

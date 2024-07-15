@@ -10,6 +10,7 @@ class PaymentDetailsEntity extends Equatable {
   final int? timestamp;
   final String? preimage;
   final bool? isPaid;
+  final int latestUpdateTimestamp;
 
   const PaymentDetailsEntity({
     required this.paymentHash,
@@ -18,6 +19,7 @@ class PaymentDetailsEntity extends Equatable {
     this.timestamp,
     this.preimage,
     this.isPaid,
+    required this.latestUpdateTimestamp,
   });
 
   @override
@@ -28,5 +30,6 @@ class PaymentDetailsEntity extends Equatable {
         timestamp,
         preimage,
         isPaid,
+        latestUpdateTimestamp,
       ];
 }

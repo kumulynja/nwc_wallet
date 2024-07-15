@@ -264,8 +264,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "upgrade-v0.3.0"
-      resolved-ref: "23919deafcb3466b602c4a733f3db38c5dfc00ac"
+      ref: payment-timestamp
+      resolved-ref: "38c89a0c6e93f863c6015eaeace2835d3f169740"
       url: "https://github.com/kumulynja/ldk-node-flutter"
     source: git
     version: "0.3.0"

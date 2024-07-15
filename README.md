@@ -299,6 +299,7 @@ All basic functionality of the NWC protocol is implemented and working in this p
 - [ ] Retry sending messages
 - [ ] Updating permitted methods of a connection
 - [ ] Connection status checks
+- [ ] lud16 in connection URI
 - [ ] Custom exceptions
 - [ ] More tests
 - [ ] More documentation

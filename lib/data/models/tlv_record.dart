@@ -18,6 +18,13 @@ class TlvRecord extends Equatable {
     );
   }
 
+  Map<String, dynamic> toMap() {
+    return {
+      'type': type,
+      'value': value,
+    };
+  }
+
   @override
   List<Object?> get props => [type, value];
 }

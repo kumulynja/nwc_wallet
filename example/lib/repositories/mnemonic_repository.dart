@@ -10,6 +10,16 @@ class SecureStorageMnemonicRepository implements MnemonicRepository {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   static const String _mnemonicKey = 'mnemonic';
 
+  // Make this a singleton class.
+  SecureStorageMnemonicRepository._privateConstructor();
+
+  static final SecureStorageMnemonicRepository _instance =
+      SecureStorageMnemonicRepository._privateConstructor();
+
+  factory SecureStorageMnemonicRepository() {
+    return _instance;
+  }
+
   @override
   Future<void> setMnemonic(String walletName, String mnemonic) async {
     await _secureStorage.write(

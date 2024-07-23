@@ -9,17 +9,16 @@ import 'package:example/widgets/transactions/transactions_list.dart';
 import 'package:example/widgets/wallets/wallet_cards_list.dart';
 import 'package:example/features/wallet_actions/wallet_actions_bottom_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_svg/svg.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     required this.walletService,
-    required this.nwcWalletService,
     super.key,
   });
 
   final LightningWalletService walletService;
-  final NwcWalletService nwcWalletService;
 
   @override
   HomeScreenState createState() => HomeScreenState();
@@ -37,92 +36,117 @@ class HomeScreenState extends State<HomeScreen> {
       getState: () => _state,
       updateState: (HomeState state) => setState(() => _state = state),
       walletService: widget.walletService,
-      nwcWalletService: widget.nwcWalletService,
     );
     _controller.init();
+    _initForegroundTask();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const AppBarWidget(),
-      drawer: SafeArea(
-        bottom: false,
-        maintainBottomViewPadding: true,
-        child: Drawer(
+    return WithForegroundTask(
+      child: Scaffold(
+        appBar: const AppBarWidget(),
+        drawer: SafeArea(
+          bottom: false,
+          maintainBottomViewPadding: true,
+          child: Drawer(
+            child: ListView(
+              children: [
+                DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  child: ListTile(
+                    leading: Image.asset(
+                      'assets/logos/nwc.png',
+                      height: 48,
+                    ),
+                    title: Text(
+                      'Nostr Wallet Connect',
+                      style: TextStyle(
+                          fontSize: 24,
+                          color: Theme.of(context).colorScheme.onPrimary),
+                    ),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.apps),
+                  title: const Text('App connections'),
+                  onTap: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (context) => NwcConnectionsBottomSheet(),
+                  ),
+                ),
+                const ListTile(
+                  leading: Icon(Icons.request_page),
+                  title: Text('Payment requests'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        body: RefreshIndicator(
+          onRefresh: () async {
+            await _controller.refresh();
+          },
           child: ListView(
             children: [
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
-                ),
-                child: ListTile(
-                  leading: Image.asset(
-                    'assets/logos/nwc.png',
-                    height: 48,
-                  ),
-                  title: Text(
-                    'Nostr Wallet Connect',
-                    style: TextStyle(
-                        fontSize: 24,
-                        color: Theme.of(context).colorScheme.onPrimary),
-                  ),
+              SizedBox(
+                height: AppSizes.kSpacingUnit * 24,
+                child: WalletCardsList(
+                  _state.walletBalance != null ? [_state.walletBalance!] : [],
+                  onAddNewWallet: _controller.addNewWallet,
+                  onDeleteWallet: _controller.deleteWallet,
                 ),
               ),
-              ListTile(
-                leading: const Icon(Icons.apps),
-                title: const Text('App connections'),
-                onTap: () => showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  builder: (context) => NwcConnectionsBottomSheet(
-                    nwcWalletService: widget.nwcWalletService,
-                  ),
-                ),
+              ReservedAmountsList(
+                reservedAmounts: _state.reservedAmountsList,
+                walletService: widget.walletService,
               ),
-              const ListTile(
-                leading: Icon(Icons.request_page),
-                title: Text('Payment requests'),
+              TransactionsList(
+                transactions: _state.transactionList,
               ),
             ],
           ),
         ),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await _controller.refresh();
-        },
-        child: ListView(
-          children: [
-            SizedBox(
-              height: AppSizes.kSpacingUnit * 24,
-              child: WalletCardsList(
-                _state.walletBalance != null ? [_state.walletBalance!] : [],
-                onAddNewWallet: _controller.addNewWallet,
-                onDeleteWallet: _controller.deleteWallet,
-              ),
-            ),
-            ReservedAmountsList(
-              reservedAmounts: _state.reservedAmountsList,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (context) => WalletActionsBottomSheet(
               walletService: widget.walletService,
             ),
-            TransactionsList(
-              transactions: _state.transactionList,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (context) => WalletActionsBottomSheet(
-            walletService: widget.walletService,
+          ),
+          child: SvgPicture.asset(
+            'assets/icons/in_out_arrows.svg',
           ),
         ),
-        child: SvgPicture.asset(
-          'assets/icons/in_out_arrows.svg',
-        ),
+      ),
+    );
+  }
+
+  void _initForegroundTask() {
+    FlutterForegroundTask.init(
+      androidNotificationOptions: AndroidNotificationOptions(
+        channelId: 'foreground_service',
+        channelName: 'Foreground Service Notification',
+        channelDescription:
+            'This notification appears when the foreground service is running.',
+        channelImportance: NotificationChannelImportance.LOW,
+        priority: NotificationPriority.LOW,
+      ),
+      iosNotificationOptions: const IOSNotificationOptions(
+        showNotification: true,
+        playSound: false,
+      ),
+      foregroundTaskOptions: const ForegroundTaskOptions(
+        interval: 5000,
+        isOnceEvent: false,
+        autoRunOnBoot: true,
+        autoRunOnMyPackageReplaced: true,
+        allowWakeLock: true,
+        allowWifiLock: true,
       ),
     );
   }

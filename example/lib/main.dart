@@ -1,7 +1,6 @@
 import 'package:example/features/home/home_screen.dart';
 import 'package:example/repositories/mnemonic_repository.dart';
 import 'package:example/services/lightning_wallet_service.dart';
-import 'package:example/services/nwc_wallet_service.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -16,28 +15,18 @@ void main() async {
   // ...and have it initialized before the app starts.
   await ldkNodeLightningWalletService.init();
 
-  // Create and init an NwcWalletService instance here as well
-  final nwcWalletService = NwcWalletServiceImpl(
-    lightningWalletService: ldkNodeLightningWalletService,
-    mnemonicRepository: mnemonicRepository,
-  );
-  await nwcWalletService.init();
-
   runApp(MyApp(
     ldkNodeLightningWalletService: ldkNodeLightningWalletService,
-    nwcWalletService: nwcWalletService,
   ));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({
     required this.ldkNodeLightningWalletService,
-    required this.nwcWalletService,
     super.key,
   });
 
   final LdkNodeLightningWalletService ldkNodeLightningWalletService;
-  final NwcWalletService nwcWalletService;
 
   // This widget is the root of your application.
   @override
@@ -65,7 +54,6 @@ class MyApp extends StatelessWidget {
       ),
       home: HomeScreen(
         walletService: ldkNodeLightningWalletService,
-        nwcWalletService: nwcWalletService,
       ),
     );
   }

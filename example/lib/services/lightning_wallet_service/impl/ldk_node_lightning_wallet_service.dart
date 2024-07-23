@@ -6,55 +6,10 @@ import 'package:convert/convert.dart';
 import 'package:example/entities/payment_details_entity.dart';
 import 'package:example/repositories/mnemonic_repository.dart';
 import 'package:example/enums/payment_direction.dart' as direction;
+import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
 import 'package:ldk_node/ldk_node.dart';
 import 'package:nwc_wallet/nwc_wallet.dart';
 import 'package:path_provider/path_provider.dart';
-
-abstract class LightningWalletService {
-  bool get hasWallet;
-  String get alias;
-  String get color;
-  Future<String> get nodeId;
-  BitcoinNetwork get network;
-  Future<int> get blockHeight;
-  Future<String> get blockHash;
-  Future<void> init();
-  Future<void> addWallet();
-  Future<void> deleteWallet();
-  Future<void> sync();
-  Future<int> get spendableBalanceSat;
-  Future<int> get inboundLiquiditySat;
-  Future<int> get totalOnChainBalanceSat;
-  Future<int> get spendableOnChainBalanceSat;
-  Future<String> drainOnChainFunds(String address);
-  Future<String> sendOnChainFunds(String address, int amountSat);
-  Future<void> openChannel({
-    required String host,
-    required int port,
-    required String nodeId,
-    required int channelAmountSat,
-    bool announceChannel = false,
-  });
-  Future<(String? bitcoinInvoice, String? lightningInvoice)> generateInvoices({
-    int? amountSat,
-    int? expirySecs,
-    String? description,
-  });
-  Future<List<PaymentDetailsEntity>> getTransactions();
-  Future<PaymentDetailsEntity?> getTransactionById(String id);
-  Future<String> pay(
-    String invoice, {
-    int? amountSat,
-    double? satPerVbyte,
-    int? absoluteFeeSat,
-  });
-}
-
-class NoWalletException implements Exception {
-  final String message;
-
-  NoWalletException(this.message);
-}
 
 class LdkNodeLightningWalletService implements LightningWalletService {
   static const _alias = 'ldk_node';
@@ -409,9 +364,11 @@ class LdkNodeLightningWalletService implements LightningWalletService {
   }
 
   Future<void> _initialize(Mnemonic mnemonic) async {
-    final builder = Builder.mutinynet().setEntropyBip39Mnemonic(
-      mnemonic: mnemonic,
-    );
+    final builder = Builder.mutinynet()
+        .setEntropyBip39Mnemonic(
+          mnemonic: mnemonic,
+        )
+        .setEsploraServer('https://mutinynet.com/api');
     _node = await builder.build();
     await _node!.start();
 

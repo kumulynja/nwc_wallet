@@ -1,6 +1,6 @@
 import 'package:example/features/home/home_state.dart';
-import 'package:example/services/lightning_wallet_service.dart';
-import 'package:example/services/nwc_wallet_service.dart';
+import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
+import 'package:example/services/nwc_wallet_service/nwc_wallet_service.dart';
 import 'package:example/view_models/reserved_amounts_list_item_view_model.dart';
 import 'package:example/view_models/transactions_list_item_view_model.dart';
 import 'package:example/view_models/wallet_balance_view_model.dart';

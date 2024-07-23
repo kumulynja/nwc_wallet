@@ -2,30 +2,56 @@ import 'dart:async';
 
 import 'package:bolt11_decoder/bolt11_decoder.dart';
 import 'package:example/entities/nwc_connection_entity.dart';
-import 'package:example/services/lightning_wallet_service.dart';
+import 'package:example/repositories/mnemonic_repository.dart';
+import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:nwc_wallet/nwc_wallet.dart';
 
-abstract class NwcWalletHandlerService {
+abstract class NwcWalletService {
   Future<void> init();
   Future<NwcConnection> addConnection({
     required String name,
     required List<NwcMethod> permittedMethods,
   });
-  Future<void> handleNwcRequest(NwcRequest request);
   Future<List<NwcConnectionEntity>> getSavedConnections();
+  Future<void> dispose();
 }
 
-class NwcWalletHandlerServiceImpl implements NwcWalletHandlerService {
+class NwcWalletServiceImpl implements NwcWalletService {
   final LightningWalletService _lightningWalletService;
+  final MnemonicRepository _mnemonicRepository;
+  NwcWallet? _nwcWallet;
+  StreamSubscription? _nwcRequestsSubscription;
 
-  NwcWalletHandlerServiceImpl({
+  NwcWalletServiceImpl({
     required LightningWalletService lightningWalletService,
-  }) : _lightningWalletService = lightningWalletService;
+    required MnemonicRepository mnemonicRepository,
+  })  : _lightningWalletService = lightningWalletService,
+        _mnemonicRepository = mnemonicRepository;
 
   @override
   Future<void> init() async {
-    // Todo: send data to foreground task to initialize nwc wallet service
+    NostrKeyPair? walletServiceKeypair;
+    List<NwcConnection> connections =
+        []; // Todo: get stored connections from repository
+
+    final mnemonic =
+        await _mnemonicRepository.getMnemonic(_lightningWalletService.alias);
+    if (mnemonic != null && mnemonic.isNotEmpty) {
+      walletServiceKeypair = NostrKeyPair.fromMnemonic(mnemonic);
+
+      _nwcWallet = NwcWallet(
+        walletNostrKeyPair: walletServiceKeypair,
+        connections: connections,
+      );
+
+      print(
+        'NwcWalletService: Wallet service initialized with pubkey: ${walletServiceKeypair.publicKey}',
+      );
+
+      // Start listening to incoming NWC requests
+      _subscribeToNwcRequests();
+    }
   }
 
   @override
@@ -33,7 +59,12 @@ class NwcWalletHandlerServiceImpl implements NwcWalletHandlerService {
     required String name,
     required List<NwcMethod> permittedMethods,
   }) async {
-    // Todo: send data to foreground task to add connection
+    if (_nwcWallet == null) {
+      throw 'NwcWalletService: Wallet service not initialized';
+    }
+
+    final newConnection =
+        await _nwcWallet!.addConnection(permittedMethods: permittedMethods);
 
     // Todo: save connection to repository
 
@@ -46,33 +77,49 @@ class NwcWalletHandlerServiceImpl implements NwcWalletHandlerService {
   }
 
   @override
-  Future<void> handleNwcRequest(NwcRequest request) async {
-    switch (request.method) {
-      case NwcMethod.getInfo:
-        await _handleGetInfoRequest(request as NwcGetInfoRequest);
-      case NwcMethod.getBalance:
-        await _handleGetBalanceRequest(request as NwcGetBalanceRequest);
-      case NwcMethod.makeInvoice:
-        await _handleMakeInvoiceRequest(request as NwcMakeInvoiceRequest);
-      case NwcMethod.lookupInvoice:
-        await _handleLookupInvoiceRequest(request as NwcLookupInvoiceRequest);
-      case NwcMethod.payInvoice:
-        await _handlePayInvoiceRequest(request as NwcPayInvoiceRequest);
-      //case NwcMethod.multiPayInvoice:
-      //  await _handleMultiPayInvoiceRequest(
-      //      request as NwcMultiPayInvoiceRequest);
-      //case NwcMethod.payKeysend:
-      //  await _handlePayKeysendRequest(request as NwcPayKeysendRequest);
-      //case NwcMethod.multiPayKeysend:
-      //  await _handleMultiPayKeysendRequest(
-      //      request as NwcMultiPayKeysendRequest);
-      //case NwcMethod.listTransactions:
-      //  await _handleListTransactionsRequest(
-      //      request as NwcListTransactionsRequest);
-      default:
-        print(
-            'NwcWalletService: Unknown NWC request method: ${request.method}');
-    }
+  Future<void> dispose() async {
+    await _nwcRequestsSubscription?.cancel();
+  }
+
+  void _subscribeToNwcRequests() {
+    _nwcRequestsSubscription = _nwcWallet!.nwcRequests.listen(
+      (request) async {
+        print('NwcWalletService: Received NWC request: $request');
+        switch (request.method) {
+          case NwcMethod.getInfo:
+            await _handleGetInfoRequest(request as NwcGetInfoRequest);
+          case NwcMethod.getBalance:
+            await _handleGetBalanceRequest(request as NwcGetBalanceRequest);
+          case NwcMethod.makeInvoice:
+            await _handleMakeInvoiceRequest(request as NwcMakeInvoiceRequest);
+          case NwcMethod.lookupInvoice:
+            await _handleLookupInvoiceRequest(
+                request as NwcLookupInvoiceRequest);
+          case NwcMethod.payInvoice:
+            await _handlePayInvoiceRequest(request as NwcPayInvoiceRequest);
+          //case NwcMethod.multiPayInvoice:
+          //  await _handleMultiPayInvoiceRequest(
+          //      request as NwcMultiPayInvoiceRequest);
+          //case NwcMethod.payKeysend:
+          //  await _handlePayKeysendRequest(request as NwcPayKeysendRequest);
+          //case NwcMethod.multiPayKeysend:
+          //  await _handleMultiPayKeysendRequest(
+          //      request as NwcMultiPayKeysendRequest);
+          //case NwcMethod.listTransactions:
+          //  await _handleListTransactionsRequest(
+          //      request as NwcListTransactionsRequest);
+          default:
+            print(
+                'NwcWalletService: Unknown NWC request method: ${request.method}');
+        }
+      },
+      onError: (e) {
+        print('NwcWalletService: Error listening to NWC requests: $e');
+      },
+      onDone: () {
+        print('NwcWalletService: Done listening to NWC requests');
+      },
+    );
   }
 
   Future<void> _handleGetInfoRequest(NwcGetInfoRequest request) async {
@@ -177,63 +224,44 @@ class NwcWalletHandlerServiceImpl implements NwcWalletHandlerService {
     try {
       if (request.paymentHash == null && request.invoice == null) {
         throw 'Missing both paymentHash and invoice';
-      } else if (request.invoice != null) {
-        // Parse the invoice
+      }
+      String? id = request.paymentHash;
+      int? expiry;
+      int? createdAt;
+      if (id == null) {
         final paymentRequest = Bolt11PaymentRequest(request.invoice!);
-        final id = paymentRequest.tags
+        id = paymentRequest.tags
             .where((tag) => tag.type == 'payment_hash')
             .first
             .data;
-        final createdAt = paymentRequest.timestamp.toInt();
-        final expiryTag = paymentRequest.tags
-            .where(
-              (tag) => tag.type == 'expiry',
-            )
-            .first
-            .data as int;
-        final expiry = createdAt + expiryTag;
-        final payment = await _lightningWalletService.getTransactionById(id!);
-
-        if (payment == null) {
-          throw InvoiceNotFoundException('Invoice not found');
-        }
-
-        return _nwcWallet!.lookupInvoiceRequestHandled(
-          request,
-          invoice: request.invoice,
-          paymentHash: id,
-          preimage: payment.preimage,
-          amountSat: payment.amountSat ?? 0,
-          feesPaidSat: 0,
-          createdAt: createdAt,
-          expiresAt: expiry,
-          settledAt:
-              payment.isPaid == true ? payment.latestUpdateTimestamp : null,
-          metadata: {},
-        );
-      } else {
-        final payment = await _lightningWalletService
-            .getTransactionById(request.paymentHash!);
-
-        if (payment == null) {
-          throw InvoiceNotFoundException('Invoice not found');
-        }
-
-        await _nwcWallet!.lookupInvoiceRequestHandled(
-          request,
-          invoice: request.invoice,
-          paymentHash: request.paymentHash!,
-          preimage: payment.preimage,
-          amountSat: payment.amountSat ?? 0,
-          feesPaidSat: 0,
-          createdAt: payment.timestamp ??
-              payment
-                  .latestUpdateTimestamp, // ldk_node_flutter doesn't return timestamp of creation separately, so this might not be entirely correct
-          settledAt:
-              payment.isPaid == true ? payment.latestUpdateTimestamp : null,
-          metadata: {},
-        );
+        createdAt = paymentRequest.timestamp.toInt();
+        expiry =
+            paymentRequest.tags.where((tag) => tag.type == 'expiry').first.data;
       }
+      final payment = await _lightningWalletService.getTransactionById(id!);
+
+      if (payment == null) {
+        throw InvoiceNotFoundException('Invoice not found');
+      }
+
+      await _nwcWallet!.lookupInvoiceRequestHandled(
+        request,
+        invoice: request.invoice,
+        paymentHash: id,
+        preimage: payment.preimage,
+        amountSat: payment.amountSat ?? 0,
+        feesPaidSat: 0,
+        createdAt: createdAt ??
+            payment.timestamp ??
+            DateTime.now().millisecondsSinceEpoch ~/
+                1000, // ldk_node_flutter doesn't return timestamp
+        expiresAt: expiry,
+        settledAt: payment.isPaid == true
+            ? DateTime.now().millisecondsSinceEpoch ~/
+                1000 // ldk_node_flutter doesn't return settled timestamp
+            : null,
+        metadata: {},
+      );
     } catch (e) {
       print('NwcWalletService: Error handling lookupInvoice request: $e');
       if (e is InvoiceNotFoundException) {

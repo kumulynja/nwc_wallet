@@ -1,5 +1,5 @@
 import 'package:example/features/reserved_amounts_actions/open_channel/open_channel_state.dart';
-import 'package:example/services/lightning_wallet_service.dart';
+import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
 
 class OpenChannelController {
   final OpenChannelState Function() _getState;

@@ -1,32 +1,37 @@
 import 'package:example/features/home/home_screen.dart';
-import 'package:example/repositories/mnemonic_repository.dart';
-import 'package:example/services/lightning_wallet_service.dart';
+import 'package:example/services/lightning_wallet_service/impl/lightning_wallet_service_proxy.dart';
+import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
+import 'package:example/services/nwc_wallet_service/nwc_wallet_service.dart';
+import 'package:example/services/nwc_wallet_service/nwc_wallet_service_proxy.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final mnemonicRepository = SecureStorageMnemonicRepository();
-  // Instantiate the wallet service in the main so
-  // we can have one service instance for the entire app...
-  final ldkNodeLightningWalletService = LdkNodeLightningWalletService(
-    mnemonicRepository: mnemonicRepository,
-  );
-  // ...and have it initialized before the app starts.
-  await ldkNodeLightningWalletService.init();
+  // Initialize port for communication between TaskHandler and UI.
+  FlutterForegroundTask.initCommunicationPort();
+
+  // Instantiate proxy services for the lightning wallet and nwc wallet
+  //  that run in the foreground task
+  final ldkNodeLightningWalletService = LightningWalletServiceProxy();
+  final nwcWalletService = NwcWalletServiceProxy();
 
   runApp(MyApp(
-    ldkNodeLightningWalletService: ldkNodeLightningWalletService,
+    lightningWalletService: ldkNodeLightningWalletService,
+    nwcWalletService: nwcWalletService,
   ));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({
-    required this.ldkNodeLightningWalletService,
+    required this.lightningWalletService,
+    required this.nwcWalletService,
     super.key,
   });
 
-  final LdkNodeLightningWalletService ldkNodeLightningWalletService;
+  final LightningWalletService lightningWalletService;
+  final NwcWalletService nwcWalletService;
 
   // This widget is the root of your application.
   @override
@@ -53,7 +58,8 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: HomeScreen(
-        walletService: ldkNodeLightningWalletService,
+        walletService: lightningWalletService,
+        nwcWalletService: nwcWalletService,
       ),
     );
   }

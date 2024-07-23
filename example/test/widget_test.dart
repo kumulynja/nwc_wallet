@@ -6,8 +6,8 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:example/repositories/mnemonic_repository.dart';
-import 'package:example/services/lightning_wallet_service.dart';
-import 'package:example/services/nwc_wallet_service.dart';
+import 'package:example/services/lightning_wallet_service/impl/ldk_node_lightning_wallet_service.dart';
+import 'package:example/services/nwc_wallet_service/nwc_wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -26,7 +26,7 @@ void main() {
     );
     // Build our app and trigger a frame.
     await tester.pumpWidget(MyApp(
-      ldkNodeLightningWalletService: ldkNodeLightningWalletService,
+      lightningWalletService: ldkNodeLightningWalletService,
       nwcWalletService: nwcWalletService,
     ));
 

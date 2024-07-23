@@ -1,5 +1,5 @@
 import 'package:example/features/nwc/connections/nwc_connections_state.dart';
-import 'package:example/services/nwc_wallet_service.dart';
+import 'package:example/services/nwc_wallet_service/nwc_wallet_service.dart';
 import 'package:example/view_models/nwc_connection_view_model.dart';
 
 class NwcConnectionsController {

@@ -1,7 +1,7 @@
 import 'package:example/constants/app_sizes.dart';
 import 'package:example/features/wallet_actions/receive/receive_tab.dart';
 import 'package:example/features/wallet_actions/send/send_tab.dart';
-import 'package:example/services/lightning_wallet_service.dart';
+import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
 import 'package:flutter/material.dart';
 
 class WalletActionsBottomSheet extends StatelessWidget {

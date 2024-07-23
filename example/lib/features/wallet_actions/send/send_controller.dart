@@ -1,5 +1,5 @@
 import 'package:example/features/wallet_actions/send/send_state.dart';
-import 'package:example/services/lightning_wallet_service.dart';
+import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
 
 class SendController {
   final SendState Function() _getState;

@@ -1,7 +1,7 @@
 import 'package:example/constants/app_sizes.dart';
 import 'package:example/features/reserved_amounts_actions/open_channel/open_channel_controller.dart';
 import 'package:example/features/reserved_amounts_actions/open_channel/open_channel_state.dart';
-import 'package:example/services/lightning_wallet_service.dart';
+import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
 import 'package:flutter/material.dart';
 
 class OpenChannelTab extends StatefulWidget {

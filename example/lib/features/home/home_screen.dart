@@ -1,16 +1,16 @@
 import 'dart:io';
 
-import 'package:example/constants/app_sizes.dart';
-import 'package:example/features/home/home_controller.dart';
-import 'package:example/features/home/home_state.dart';
-import 'package:example/features/nwc/connections/nwc_connections_bottom_sheet.dart';
-import 'package:example/foreground_task_handler.dart';
-import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
-import 'package:example/services/nwc_wallet_service/nwc_wallet_service.dart';
-import 'package:example/widgets/reserved_amounts/reserved_amounts_list.dart';
-import 'package:example/widgets/transactions/transactions_list.dart';
-import 'package:example/widgets/wallets/wallet_cards_list.dart';
-import 'package:example/features/wallet_actions/wallet_actions_bottom_sheet.dart';
+import 'package:nwc_wallet_app/constants/app_sizes.dart';
+import 'package:nwc_wallet_app/features/home/home_controller.dart';
+import 'package:nwc_wallet_app/features/home/home_state.dart';
+import 'package:nwc_wallet_app/features/nwc/connections/nwc_connections_bottom_sheet.dart';
+import 'package:nwc_wallet_app/foreground/foreground_task_handler.dart';
+import 'package:nwc_wallet_app/services/lightning_wallet_service/lightning_wallet_service.dart';
+import 'package:nwc_wallet_app/services/nwc_wallet_service/nwc_wallet_service.dart';
+import 'package:nwc_wallet_app/widgets/reserved_amounts/reserved_amounts_list.dart';
+import 'package:nwc_wallet_app/widgets/transactions/transactions_list.dart';
+import 'package:nwc_wallet_app/widgets/wallets/wallet_cards_list.dart';
+import 'package:nwc_wallet_app/features/wallet_actions/wallet_actions_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_svg/svg.dart';
@@ -173,9 +173,9 @@ class HomeScreenState extends State<HomeScreen> {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'foreground_service',
-        channelName: 'Foreground Service Notification',
+        channelName: 'Nostr Wallet Connect Notification',
         channelDescription:
-            'This notification appears when the foreground service is running.',
+            'This notification appears when wallet is connected over Nostr Wallet Connect.',
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
       ),
@@ -199,11 +199,18 @@ class HomeScreenState extends State<HomeScreen> {
       return FlutterForegroundTask.restartService();
     } else {
       return FlutterForegroundTask.startService(
-        notificationTitle: 'Foreground Service is running',
-        notificationText: 'Tap to return to the app',
+        notificationTitle: 'Nostr Wallet Connect',
+        notificationText: '0 active connections',
         notificationIcon: null,
         notificationButtons: [
-          const NotificationButton(id: 'btn_hello', text: 'hello'),
+          const NotificationButton(
+            id: 'btn_payment_requests',
+            text: 'Approve Requests',
+          ),
+          const NotificationButton(
+            id: 'btn_pay',
+            text: 'Quick Pay',
+          ),
         ],
         callback: startCallback,
       );

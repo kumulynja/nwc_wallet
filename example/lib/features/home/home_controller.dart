@@ -1,15 +1,13 @@
-import 'package:example/features/home/home_state.dart';
-import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
-import 'package:example/services/nwc_wallet_service/nwc_wallet_service.dart';
-import 'package:example/view_models/reserved_amounts_list_item_view_model.dart';
-import 'package:example/view_models/transactions_list_item_view_model.dart';
-import 'package:example/view_models/wallet_balance_view_model.dart';
+import 'package:nwc_wallet_app/features/home/home_state.dart';
+import 'package:nwc_wallet_app/services/lightning_wallet_service/lightning_wallet_service.dart';
+import 'package:nwc_wallet_app/view_models/reserved_amounts_list_item_view_model.dart';
+import 'package:nwc_wallet_app/view_models/transactions_list_item_view_model.dart';
+import 'package:nwc_wallet_app/view_models/wallet_balance_view_model.dart';
 
 class HomeController {
   final HomeState Function() _getState;
   final Function(HomeState state) _updateState;
   final LightningWalletService _walletService;
-  final NwcWalletService _nwcWalletService;
 
   HomeController({
     required getState,
@@ -18,19 +16,17 @@ class HomeController {
     required nwcWalletService,
   })  : _getState = getState,
         _updateState = updateState,
-        _walletService = walletService,
-        _nwcWalletService = nwcWalletService;
+        _walletService = walletService;
 
   Future<void> init() async {
+    await _walletService.init();
+    final hasWallet = await _walletService.hasWallet;
     _updateState(_getState().copyWith(
       walletBalance: WalletBalanceViewModel(
-        balanceSat: _walletService.hasWallet
-            ? await _walletService.spendableBalanceSat
-            : null,
+        balanceSat: hasWallet ? await _walletService.spendableBalanceSat : null,
       ),
-      transactionList: _walletService.hasWallet ? await _getTransactions() : [],
-      reservedAmountsList:
-          _walletService.hasWallet ? await _getReservedAmounts() : null,
+      transactionList: hasWallet ? await _getTransactions() : [],
+      reservedAmountsList: hasWallet ? await _getReservedAmounts() : null,
     ));
   }
 
@@ -38,9 +34,6 @@ class HomeController {
     final state = _getState();
     try {
       await _walletService.addWallet();
-      // Now that a lightning wallet is created,
-      //  the Nwc wallet service can also be initialized
-      await _nwcWalletService.init();
       _updateState(
         state.copyWith(
           walletBalance: WalletBalanceViewModel(
@@ -74,7 +67,7 @@ class HomeController {
   Future<void> refresh() async {
     try {
       final state = _getState();
-      if (_walletService.hasWallet) {
+      if (await _walletService.hasWallet) {
         await _walletService.sync();
         final balance = await _walletService.spendableBalanceSat;
         _updateState(

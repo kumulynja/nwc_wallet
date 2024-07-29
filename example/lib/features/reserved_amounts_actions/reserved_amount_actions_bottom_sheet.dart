@@ -1,6 +1,6 @@
-import 'package:example/constants/app_sizes.dart';
-import 'package:example/features/reserved_amounts_actions/open_channel/open_channel_tab.dart';
-import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
+import 'package:nwc_wallet_app/constants/app_sizes.dart';
+import 'package:nwc_wallet_app/features/reserved_amounts_actions/open_channel/open_channel_tab.dart';
+import 'package:nwc_wallet_app/services/lightning_wallet_service/lightning_wallet_service.dart';
 import 'package:flutter/material.dart';
 
 class ReservedAmountActionsBottomSheet extends StatelessWidget {

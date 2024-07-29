@@ -1,4 +1,4 @@
-import 'package:example/constants/app_sizes.dart';
+import 'package:nwc_wallet_app/constants/app_sizes.dart';
 import 'package:flutter/material.dart';
 
 class AddNewWalletCard extends StatelessWidget {

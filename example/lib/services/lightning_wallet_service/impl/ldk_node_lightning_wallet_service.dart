@@ -3,10 +3,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
-import 'package:example/entities/payment_details_entity.dart';
-import 'package:example/repositories/mnemonic_repository.dart';
-import 'package:example/enums/payment_direction.dart' as direction;
-import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
+import 'package:nwc_wallet_app/entities/payment_details_entity.dart';
+import 'package:nwc_wallet_app/repositories/mnemonic_repository.dart';
+import 'package:nwc_wallet_app/enums/payment_direction.dart' as direction;
+import 'package:nwc_wallet_app/services/lightning_wallet_service/lightning_wallet_service.dart';
 import 'package:ldk_node/ldk_node.dart';
 import 'package:nwc_wallet/nwc_wallet.dart';
 import 'package:path_provider/path_provider.dart';
@@ -55,13 +55,13 @@ class LdkNodeLightningWalletService implements LightningWalletService {
   }
 
   @override
-  bool get hasWallet => _node != null;
+  Future<bool> get hasWallet => Future.value(_node != null);
 
   @override
-  String get alias => _alias;
+  Future<String> get alias => Future.value(_alias);
 
   @override
-  String get color => _color;
+  Future<String> get color => Future.value(_color);
 
   @override
   Future<String> get nodeId async {
@@ -74,7 +74,7 @@ class LdkNodeLightningWalletService implements LightningWalletService {
   }
 
   @override
-  BitcoinNetwork get network => BitcoinNetwork.signet;
+  Future<BitcoinNetwork> get network => Future.value(BitcoinNetwork.signet);
 
   @override
   Future<int> get blockHeight async {
@@ -369,6 +369,7 @@ class LdkNodeLightningWalletService implements LightningWalletService {
           mnemonic: mnemonic,
         )
         .setEsploraServer('https://mutinynet.com/api');
+    //.setGossipSourceRgs('https://rgs.mutinynet.com/snapshot');
     _node = await builder.build();
     await _node!.start();
 

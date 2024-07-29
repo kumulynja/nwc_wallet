@@ -5,13 +5,13 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:example/repositories/mnemonic_repository.dart';
-import 'package:example/services/lightning_wallet_service/impl/ldk_node_lightning_wallet_service.dart';
-import 'package:example/services/nwc_wallet_service/nwc_wallet_service.dart';
+import 'package:nwc_wallet_app/repositories/mnemonic_repository.dart';
+import 'package:nwc_wallet_app/services/lightning_wallet_service/impl/ldk_node_lightning_wallet_service.dart';
+import 'package:nwc_wallet_app/services/nwc_wallet_service/nwc_wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:example/main.dart';
+import 'package:nwc_wallet_app/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {

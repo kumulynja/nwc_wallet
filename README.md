@@ -323,4 +323,4 @@ Also a special shootout to the amazing people at [Flash](https://paywithflash.co
 
 ## NWC Apps
 
-The Nostr Wallet Connect protocol consists of different parts. Mainly, the wallet service side and the website or app side. They communicate with each other over Nostr relays. This package is aimed to build the wallet service side of the protocol. If your app is not a wallet, but you would like to enable Lightning wallets to connect to your app through Nostr Wallet Connect, you can use the following Flutter package: https://github.com/bringinxyz/nwc.
+The Nostr Wallet Connect protocol consists of different parts. Mainly, the wallet service side and the website or app side. They communicate with each other over Nostr relays. This package is aimed to build the wallet service side of the protocol. If your app is not a wallet, but you would like the possibility of Lightning wallets being connected to your app through Nostr Wallet Connect to handle payments, you can use the following Flutter package: https://github.com/bringinxyz/nwc.

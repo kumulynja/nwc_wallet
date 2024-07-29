@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:example/view_models/nwc_connection_view_model.dart';
+import 'package:nwc_wallet_app/view_models/nwc_connection_view_model.dart';
 import 'package:nwc_wallet/nwc_wallet.dart';
 
 class NwcConnectionsState extends Equatable {

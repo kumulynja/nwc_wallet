@@ -1,7 +1,7 @@
-import 'package:example/constants/app_sizes.dart';
-import 'package:example/features/nwc/connections/nwc_connections_controller.dart';
-import 'package:example/features/nwc/connections/nwc_connections_state.dart';
-import 'package:example/services/nwc_wallet_service/nwc_wallet_service.dart';
+import 'package:nwc_wallet_app/constants/app_sizes.dart';
+import 'package:nwc_wallet_app/features/nwc/connections/nwc_connections_controller.dart';
+import 'package:nwc_wallet_app/features/nwc/connections/nwc_connections_state.dart';
+import 'package:nwc_wallet_app/services/nwc_wallet_service/nwc_wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

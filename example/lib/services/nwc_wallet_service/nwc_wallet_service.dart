@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:bolt11_decoder/bolt11_decoder.dart';
-import 'package:example/entities/nwc_connection_entity.dart';
-import 'package:example/repositories/mnemonic_repository.dart';
-import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
+import 'package:nwc_wallet_app/entities/nwc_connection_entity.dart';
+import 'package:nwc_wallet_app/repositories/mnemonic_repository.dart';
+import 'package:nwc_wallet_app/services/lightning_wallet_service/lightning_wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:nwc_wallet/nwc_wallet.dart';
 
@@ -35,8 +35,8 @@ class NwcWalletServiceImpl implements NwcWalletService {
     List<NwcConnection> connections =
         []; // Todo: get stored connections from repository
 
-    final mnemonic =
-        await _mnemonicRepository.getMnemonic(_lightningWalletService.alias);
+    final mnemonic = await _mnemonicRepository
+        .getMnemonic(await _lightningWalletService.alias);
     if (mnemonic != null && mnemonic.isNotEmpty) {
       walletServiceKeypair = NostrKeyPair.fromMnemonic(mnemonic);
 
@@ -124,10 +124,10 @@ class NwcWalletServiceImpl implements NwcWalletService {
 
   Future<void> _handleGetInfoRequest(NwcGetInfoRequest request) async {
     try {
-      final alias = _lightningWalletService.alias;
-      final color = _lightningWalletService.color;
+      final alias = await _lightningWalletService.alias;
+      final color = await _lightningWalletService.color;
       final pubkey = await _lightningWalletService.nodeId;
-      final network = _lightningWalletService.network;
+      final network = await _lightningWalletService.network;
       final blockHeight = await _lightningWalletService.blockHeight;
       final blockHash = await _lightningWalletService.blockHash;
 

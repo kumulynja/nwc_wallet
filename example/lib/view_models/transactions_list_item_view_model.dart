@@ -1,6 +1,6 @@
-import 'package:example/entities/payment_details_entity.dart';
+import 'package:nwc_wallet_app/entities/payment_details_entity.dart';
 import 'package:equatable/equatable.dart';
-import 'package:example/enums/payment_direction.dart';
+import 'package:nwc_wallet_app/enums/payment_direction.dart';
 
 class TransactionsListItemViewModel extends Equatable {
   final String id;

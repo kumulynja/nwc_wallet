@@ -1,6 +1,6 @@
-import 'package:example/features/nwc/connections/nwc_connections_state.dart';
-import 'package:example/services/nwc_wallet_service/nwc_wallet_service.dart';
-import 'package:example/view_models/nwc_connection_view_model.dart';
+import 'package:nwc_wallet_app/features/nwc/connections/nwc_connections_state.dart';
+import 'package:nwc_wallet_app/services/nwc_wallet_service/nwc_wallet_service.dart';
+import 'package:nwc_wallet_app/view_models/nwc_connection_view_model.dart';
 
 class NwcConnectionsController {
   final NwcConnectionsState Function() _getState;

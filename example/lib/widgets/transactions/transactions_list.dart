@@ -1,5 +1,5 @@
-import 'package:example/view_models/transactions_list_item_view_model.dart';
-import 'package:example/widgets/transactions/transactions_list_item.dart';
+import 'package:nwc_wallet_app/view_models/transactions_list_item_view_model.dart';
+import 'package:nwc_wallet_app/widgets/transactions/transactions_list_item.dart';
 import 'package:flutter/material.dart';
 
 class TransactionsList extends StatelessWidget {

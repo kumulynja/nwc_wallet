@@ -1,6 +1,6 @@
-import 'package:example/features/reserved_amounts_actions/reserved_amount_actions_bottom_sheet.dart';
-import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
-import 'package:example/view_models/reserved_amounts_list_item_view_model.dart';
+import 'package:nwc_wallet_app/features/reserved_amounts_actions/reserved_amount_actions_bottom_sheet.dart';
+import 'package:nwc_wallet_app/services/lightning_wallet_service/lightning_wallet_service.dart';
+import 'package:nwc_wallet_app/view_models/reserved_amounts_list_item_view_model.dart';
 import 'package:flutter/material.dart';
 
 class ReservedAmountsListItem extends StatelessWidget {

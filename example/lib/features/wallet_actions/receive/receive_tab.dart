@@ -1,7 +1,7 @@
-import 'package:example/constants/app_sizes.dart';
-import 'package:example/features/wallet_actions/receive/receive_controller.dart';
-import 'package:example/features/wallet_actions/receive/receive_state.dart';
-import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
+import 'package:nwc_wallet_app/constants/app_sizes.dart';
+import 'package:nwc_wallet_app/features/wallet_actions/receive/receive_controller.dart';
+import 'package:nwc_wallet_app/features/wallet_actions/receive/receive_state.dart';
+import 'package:nwc_wallet_app/services/lightning_wallet_service/lightning_wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -18,6 +18,7 @@ class ReceiveTab extends StatefulWidget {
 class ReceiveTabState extends State<ReceiveTab> {
   ReceiveState _state = const ReceiveState();
   late ReceiveController _controller;
+  bool _hasWallet = false;
 
   @override
   void initState() {
@@ -28,6 +29,12 @@ class ReceiveTabState extends State<ReceiveTab> {
       updateState: (ReceiveState state) => setState(() => _state = state),
       walletService: widget.walletService,
     );
+
+    widget.walletService.hasWallet.then((hasWallet) {
+      setState(() {
+        _hasWallet = hasWallet;
+      });
+    });
   }
 
   @override
@@ -40,7 +47,7 @@ class ReceiveTabState extends State<ReceiveTab> {
             ? const CircularProgressIndicator()
             : _state.bip21Uri == null || _state.bip21Uri!.isEmpty
                 ? ReceiveTabInputFields(
-                    hasWalletAvailable: widget.walletService.hasWallet,
+                    hasWalletAvailable: _hasWallet,
                     amountChangeHandler: _controller.amountChangeHandler,
                     labelChangeHandler: _controller.labelChangeHandler,
                     messageChangeHandler: _controller.messageChangeHandler,

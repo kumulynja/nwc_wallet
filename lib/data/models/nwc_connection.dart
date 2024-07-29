@@ -14,6 +14,24 @@ class NwcConnection extends Equatable {
     this.uri,
   });
 
+  factory NwcConnection.fromMap(Map<String, dynamic> map) {
+    return NwcConnection(
+      pubkey: map['pubkey'] as String,
+      permittedMethods: (map['permittedMethods'] as List)
+          .map((e) => NwcMethod.fromPlaintext(e as String))
+          .toList(),
+      uri: map['uri'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'pubkey': pubkey,
+      'permittedMethods': permittedMethods.map((e) => e.plaintext).toList(),
+      'uri': uri,
+    };
+  }
+
   @override
   List<Object?> get props => [
         pubkey,

@@ -1,13 +1,13 @@
 import 'dart:async';
-import 'package:example/entities/payment_details_entity.dart';
+import 'package:nwc_wallet_app/entities/payment_details_entity.dart';
 import 'package:nwc_wallet/nwc_wallet.dart';
 
 abstract class LightningWalletService {
-  bool get hasWallet;
-  String get alias;
-  String get color;
+  Future<bool> get hasWallet;
+  Future<String> get alias;
+  Future<String> get color;
   Future<String> get nodeId;
-  BitcoinNetwork get network;
+  Future<BitcoinNetwork> get network;
   Future<int> get blockHeight;
   Future<String> get blockHash;
   Future<void> init();

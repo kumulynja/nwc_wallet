@@ -1,7 +1,7 @@
-import 'package:example/constants/app_sizes.dart';
-import 'package:example/features/wallet_actions/send/send_controller.dart';
-import 'package:example/features/wallet_actions/send/send_state.dart';
-import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
+import 'package:nwc_wallet_app/constants/app_sizes.dart';
+import 'package:nwc_wallet_app/features/wallet_actions/send/send_controller.dart';
+import 'package:nwc_wallet_app/features/wallet_actions/send/send_state.dart';
+import 'package:nwc_wallet_app/services/lightning_wallet_service/lightning_wallet_service.dart';
 import 'package:flutter/material.dart';
 
 class SendTab extends StatefulWidget {
@@ -89,19 +89,19 @@ class SendTabState extends State<SendTab> {
                   _state.error is NotEnoughFundsException ||
                   _state.isMakingPayment
               ? null
-              : () => _controller.makePayment().then(
-                    (_) {
-                      if (_state.txId != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                                'Payment successful. Tx ID: ${_state.partialTxId}'),
-                          ),
-                        );
-                        Navigator.pop(context);
-                      }
-                    },
-                  ),
+              : () async {
+                  await _controller.makePayment();
+
+                  if (_state.txId != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                            'Payment successful. Tx ID: ${_state.partialTxId}'),
+                      ),
+                    );
+                    Navigator.pop(context);
+                  }
+                },
           label: const Text('Send funds'),
           icon: _state.isMakingPayment
               ? const CircularProgressIndicator()

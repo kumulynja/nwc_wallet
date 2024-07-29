@@ -1,8 +1,7 @@
-import 'package:example/features/home/home_screen.dart';
-import 'package:example/services/lightning_wallet_service/impl/lightning_wallet_service_proxy.dart';
-import 'package:example/services/lightning_wallet_service/lightning_wallet_service.dart';
-import 'package:example/services/nwc_wallet_service/nwc_wallet_service.dart';
-import 'package:example/services/nwc_wallet_service/nwc_wallet_service_proxy.dart';
+import 'package:nwc_wallet_app/features/home/home_screen.dart';
+import 'package:nwc_wallet_app/foreground/foreground_task_services_proxy.dart';
+import 'package:nwc_wallet_app/services/lightning_wallet_service/lightning_wallet_service.dart';
+import 'package:nwc_wallet_app/services/nwc_wallet_service/nwc_wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
@@ -14,12 +13,11 @@ void main() async {
 
   // Instantiate proxy services for the lightning wallet and nwc wallet
   //  that run in the foreground task
-  final ldkNodeLightningWalletService = LightningWalletServiceProxy();
-  final nwcWalletService = NwcWalletServiceProxy();
+  final foregroundProxy = ForegroundTaskServicesProxy();
 
   runApp(MyApp(
-    lightningWalletService: ldkNodeLightningWalletService,
-    nwcWalletService: nwcWalletService,
+    lightningWalletService: foregroundProxy,
+    nwcWalletService: foregroundProxy,
   ));
 }
 

@@ -1,5 +1,5 @@
-import 'package:example/constants/app_sizes.dart';
-import 'package:example/view_models/wallet_balance_view_model.dart';
+import 'package:nwc_wallet_app/constants/app_sizes.dart';
+import 'package:nwc_wallet_app/view_models/wallet_balance_view_model.dart';
 import 'package:flutter/material.dart';
 
 class WalletBalanceCard extends StatelessWidget {

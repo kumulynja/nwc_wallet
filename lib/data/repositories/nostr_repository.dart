@@ -76,7 +76,6 @@ class NostrRepositoryImpl implements NostrRepository {
 
   @override
   void requestEvents(String subscriptionId, List<NostrFilters> filters) {
-    // Todo: Implement completion with EOSE
     final message =
         ClientRequestMessage(subscriptionId: subscriptionId, filters: filters);
     _relayProvider.sendMessage(message);

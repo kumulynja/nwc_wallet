@@ -69,13 +69,12 @@ class NwcServiceImpl implements NwcService {
   Future<void> connect({int retrySeconds = 1}) async {
     try {
       await _nostrRepository.connect();
+      print('...connected to relay.');
       // Start listening to NWC requests for the wallet
       await _subscribeToNwcRequests();
-
+      print('...subscribed to requests.');
       // Was able to subscribe to requests, so reset the retry count
       _retryCount = 0;
-
-      print('...connected to relay.');
     } catch (e) {
       debugPrint('Error connecting: $e');
       await disconnect();

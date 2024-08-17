@@ -36,6 +36,7 @@ class NostrRelayProviderImpl implements NostrRelayProvider {
 
     _subscription = _channel?.stream.listen((data) {
       final message = NostrRelayMessage.fromSerialized(data);
+      debugPrint('Received message: $message');
       _messageController.add(message);
     }, onError: (error) {
       debugPrint('Error listening to relay messages: $error');

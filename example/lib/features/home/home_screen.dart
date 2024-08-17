@@ -180,7 +180,7 @@ class HomeScreenState extends State<HomeScreen> {
         priority: NotificationPriority.LOW,
       ),
       iosNotificationOptions: const IOSNotificationOptions(
-        showNotification: false,
+        showNotification: true,
         playSound: false,
       ),
       foregroundTaskOptions: const ForegroundTaskOptions(

@@ -1,6 +1,7 @@
 enum ForegroundMethod {
   init('init'),
   addConnection('addConnection'),
+  getSavedConnections('getSavedConnections'),
   addWallet('addWallet'),
   hasWallet('hasWallet'),
   alias('alias'),
@@ -33,6 +34,8 @@ enum ForegroundMethod {
         return ForegroundMethod.init;
       case 'addConnection':
         return ForegroundMethod.addConnection;
+      case 'getSavedConnections':
+        return ForegroundMethod.getSavedConnections;
       case 'addWallet':
         return ForegroundMethod.addWallet;
       case 'hasWallet':

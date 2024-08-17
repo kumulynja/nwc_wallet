@@ -1,12 +1,22 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:nwc_wallet_app/features/home/home_screen.dart';
 import 'package:nwc_wallet_app/foreground/foreground_task_services_proxy.dart';
+import 'package:nwc_wallet_app/notifications/notification_handlers.dart';
 import 'package:nwc_wallet_app/services/lightning_wallet_service/lightning_wallet_service.dart';
 import 'package:nwc_wallet_app/services/nwc_wallet_service/nwc_wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialize Firebase for push notifications
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   // Initialize port for communication between TaskHandler and UI.
   FlutterForegroundTask.initCommunicationPort();

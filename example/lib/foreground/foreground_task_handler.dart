@@ -1,13 +1,22 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:nwc_wallet_app/entities/foreground_task_request.dart';
 import 'package:nwc_wallet_app/entities/foreground_task_response.dart';
 import 'package:nwc_wallet_app/enums/foreground_method.dart';
+import 'package:nwc_wallet_app/firebase_options.dart';
+import 'package:nwc_wallet_app/repositories/connection_repository.dart';
+import 'package:nwc_wallet_app/repositories/last_seen_request_timestamp_repository.dart';
 import 'package:nwc_wallet_app/repositories/mnemonic_repository.dart';
+import 'package:nwc_wallet_app/repositories/wallet_token_repository.dart';
 import 'package:nwc_wallet_app/services/lightning_wallet_service/impl/ldk_node_lightning_wallet_service.dart';
 import 'package:nwc_wallet_app/services/lightning_wallet_service/lightning_wallet_service.dart';
 import 'package:nwc_wallet_app/services/nwc_wallet_service/nwc_wallet_service.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // The callback function should always be a top-level function.
 @pragma('vm:entry-point')
@@ -18,6 +27,10 @@ void startCallback() {
 
 class ForegroundTaskHandler extends TaskHandler {
   final _mnemonicRepository = SecureStorageMnemonicRepository();
+  late FirebaseFirestore _firestore;
+  late FirebaseMessaging _firebaseMessaging;
+  late ConnectionRepository _connectionRepository;
+  late LastSeenRequestTimestampRepository _lastSeenRequestTimestampRepository;
   late NwcWalletService _nwcWalletService;
   late LightningWalletService _lightningWalletService;
   int _nrOfConnections = 0;
@@ -40,6 +53,18 @@ class ForegroundTaskHandler extends TaskHandler {
     // Handle requests for the nwc and wallet service here.
     switch (receiveData.method) {
       case ForegroundMethod.init:
+        WidgetsFlutterBinding.ensureInitialized();
+        // Initialize Firebase for push notifications
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        _firestore = FirebaseFirestore.instance;
+        _firebaseMessaging = FirebaseMessaging.instance;
+        _connectionRepository = SecureStorageConnectionRepository();
+        _lastSeenRequestTimestampRepository =
+            SharedPreferencesLastSeenRequestTimestampRepository(
+          sharedPreferences: await SharedPreferences.getInstance(),
+        );
         // Instantiate the wallet service in the main so
         // we can have one service instance for the entire app...
         _lightningWalletService = LdkNodeLightningWalletService(
@@ -50,6 +75,13 @@ class ForegroundTaskHandler extends TaskHandler {
         _nwcWalletService = NwcWalletServiceImpl(
           lightningWalletService: _lightningWalletService,
           mnemonicRepository: _mnemonicRepository,
+          connectionRepository: _connectionRepository,
+          lastSeenRequestTimestampRepository:
+              _lastSeenRequestTimestampRepository,
+          pushTokenRepository: FirestoreWalletTokenRepository(
+            firestore: _firestore,
+            firebaseMessaging: _firebaseMessaging,
+          ),
         );
 
         await _lightningWalletService.init();
@@ -217,6 +249,12 @@ class ForegroundTaskHandler extends TaskHandler {
           transaction: transaction,
         );
         FlutterForegroundTask.sendDataToMain(jsonEncode(response.toMap()));
+      case ForegroundMethod.getSavedConnections:
+        final connections = await _nwcWalletService.getSavedConnections();
+        final response = ForegroundTaskResponse.getSavedConnectionsResponse(
+          connections: connections,
+        );
+        FlutterForegroundTask.sendDataToMain(jsonEncode(response.toMap()));
     }
     print('DATA PROCESSED: $dataMap');
   }
@@ -226,6 +264,7 @@ class ForegroundTaskHandler extends TaskHandler {
   void onRepeatEvent(DateTime timestamp) async {
     // Todo: You could sync the wallet here or any other data and send NWC notifications to main
     //  (once that proposal is accepted).
+    print('onRepeatEvent');
   }
 
   // Called when the task is destroyed.

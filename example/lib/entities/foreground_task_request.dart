@@ -16,6 +16,8 @@ abstract class ForegroundTaskRequest extends Equatable {
     required String name,
     required List<NwcMethod> permittedMethods,
   }) = AddConnectionRequest;
+  const factory ForegroundTaskRequest.getSavedConnectionsRequest() =
+      GetSavedConnectionsRequest;
   const factory ForegroundTaskRequest.addWalletRequest() = AddWalletRequest;
   const factory ForegroundTaskRequest.hasWalletRequest() = HasWalletRequest;
   const factory ForegroundTaskRequest.aliasRequest() = AliasRequest;
@@ -79,6 +81,8 @@ abstract class ForegroundTaskRequest extends Equatable {
               .map((e) => NwcMethod.fromPlaintext(e))
               .toList(),
         );
+      case ForegroundMethod.getSavedConnections:
+        return const GetSavedConnectionsRequest();
       case ForegroundMethod.addWallet:
         return const AddWalletRequest();
       case ForegroundMethod.hasWallet:
@@ -184,6 +188,12 @@ class AddConnectionRequest extends ForegroundTaskRequest {
 
   @override
   List<Object?> get props => [name, permittedMethods];
+}
+
+@immutable
+class GetSavedConnectionsRequest extends ForegroundTaskRequest {
+  const GetSavedConnectionsRequest()
+      : super(method: ForegroundMethod.getSavedConnections);
 }
 
 @immutable

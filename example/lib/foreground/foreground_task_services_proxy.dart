@@ -39,8 +39,11 @@ class ForegroundTaskServicesProxy
   }
 
   @override
-  Future<List<NwcConnectionEntity>> getSavedConnections() {
-    return Future.value([]); // Todo: get stored connections from repository
+  Future<List<NwcConnectionEntity>> getSavedConnections() async {
+    const request = GetSavedConnectionsRequest();
+    final result = await _sendRequestToForegroundTask(request);
+    final response = result as GetSavedConnectionsResponse;
+    return response.connections;
   }
 
   @override

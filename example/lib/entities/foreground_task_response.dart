@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:nwc_wallet/data/models/nwc_connection.dart';
+import 'package:nwc_wallet_app/entities/nwc_connection_entity.dart';
 import 'package:nwc_wallet_app/entities/payment_details_entity.dart';
 import 'package:nwc_wallet_app/enums/foreground_method.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,11 @@ class ForegroundTaskResponse extends Equatable {
   factory ForegroundTaskResponse.addConnectionResponse(
       {required NwcConnection connection}) {
     return AddConnectionResponse(connection: connection);
+  }
+  factory ForegroundTaskResponse.getSavedConnectionsResponse({
+    required List<NwcConnectionEntity> connections,
+  }) {
+    return GetSavedConnectionsResponse(connections: connections);
   }
   factory ForegroundTaskResponse.addWalletResponse() {
     return const AddWalletResponse();
@@ -124,6 +130,12 @@ class ForegroundTaskResponse extends Equatable {
         return AddConnectionResponse(
           connection: NwcConnection.fromMap(map['connection']),
         );
+      case ForegroundMethod.getSavedConnections:
+        return GetSavedConnectionsResponse(
+          connections: (map['connections'] as List)
+              .map((e) => NwcConnectionEntity.fromJson(e))
+              .toList(),
+        );
       case ForegroundMethod.addWallet:
         return const AddWalletResponse();
       case ForegroundMethod.hasWallet:
@@ -226,6 +238,25 @@ class AddConnectionResponse extends ForegroundTaskResponse {
 
   @override
   List<Object?> get props => [...super.props, connection];
+}
+
+@immutable
+class GetSavedConnectionsResponse extends ForegroundTaskResponse {
+  final List<NwcConnectionEntity> connections;
+
+  const GetSavedConnectionsResponse({required this.connections})
+      : super(method: ForegroundMethod.getSavedConnections);
+
+  @override
+  Map<String, dynamic> toMap() {
+    return {
+      ...super.toMap(),
+      'connections': connections.map((e) => e.toJson()).toList(),
+    };
+  }
+
+  @override
+  List<Object?> get props => [...super.props, connections];
 }
 
 @immutable

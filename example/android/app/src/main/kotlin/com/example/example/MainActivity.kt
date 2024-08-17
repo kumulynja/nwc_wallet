@@ -1,4 +1,4 @@
-package com.example.example
+package dev.nwc.wallet.app
 
 import io.flutter.embedding.android.FlutterActivity
 

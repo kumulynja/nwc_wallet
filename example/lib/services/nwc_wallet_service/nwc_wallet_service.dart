@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:bolt11_decoder/bolt11_decoder.dart';
 import 'package:nwc_wallet_app/entities/nwc_connection_entity.dart';
+import 'package:nwc_wallet_app/repositories/connection_repository.dart';
+import 'package:nwc_wallet_app/repositories/last_seen_request_timestamp_repository.dart';
 import 'package:nwc_wallet_app/repositories/mnemonic_repository.dart';
+import 'package:nwc_wallet_app/repositories/wallet_token_repository.dart';
 import 'package:nwc_wallet_app/services/lightning_wallet_service/lightning_wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:nwc_wallet/nwc_wallet.dart';
@@ -20,20 +23,31 @@ abstract class NwcWalletService {
 class NwcWalletServiceImpl implements NwcWalletService {
   final LightningWalletService _lightningWalletService;
   final MnemonicRepository _mnemonicRepository;
+  final ConnectionRepository _connectionRepository;
+  final LastSeenRequestTimestampRepository _lastSeenRequestTimestampRepository;
+  final WalletTokenRepository? _pushTokenRepository;
   NwcWallet? _nwcWallet;
   StreamSubscription? _nwcRequestsSubscription;
 
   NwcWalletServiceImpl({
     required LightningWalletService lightningWalletService,
     required MnemonicRepository mnemonicRepository,
+    required ConnectionRepository connectionRepository,
+    required LastSeenRequestTimestampRepository
+        lastSeenRequestTimestampRepository,
+    WalletTokenRepository? pushTokenRepository,
   })  : _lightningWalletService = lightningWalletService,
-        _mnemonicRepository = mnemonicRepository;
+        _mnemonicRepository = mnemonicRepository,
+        _connectionRepository = connectionRepository,
+        _lastSeenRequestTimestampRepository =
+            lastSeenRequestTimestampRepository,
+        _pushTokenRepository = pushTokenRepository;
 
   @override
   Future<void> init() async {
     NostrKeyPair? walletServiceKeypair;
-    List<NwcConnection> connections =
-        []; // Todo: get stored connections from repository
+    List<NwcConnectionEntity> connections =
+        await _connectionRepository.getConnections();
 
     final mnemonic = await _mnemonicRepository
         .getMnemonic(await _lightningWalletService.alias);
@@ -42,11 +56,27 @@ class NwcWalletServiceImpl implements NwcWalletService {
 
       _nwcWallet = NwcWallet(
         walletNostrKeyPair: walletServiceKeypair,
-        connections: connections,
+        connections: connections
+            .map(
+              (entity) => NwcConnection(
+                pubkey: entity.pubkey,
+                permittedMethods: entity.permittedMethods,
+              ),
+            )
+            .toList(),
+        lastRequestTimestamp: await _lastSeenRequestTimestampRepository
+            .getLastSeenRequestTimestamp(),
       );
 
+      if (_pushTokenRepository != null) {
+        await _pushTokenRepository.registerTokenForWallet(
+          walletServicePublicKey: walletServiceKeypair.publicKey,
+        );
+      }
+
       print(
-        'NwcWalletService: Wallet service initialized with pubkey: ${walletServiceKeypair.publicKey}',
+        'NwcWalletService: Wallet service initialized with pubkey:'
+        ' ${walletServiceKeypair.publicKey}',
       );
 
       // Start listening to incoming NWC requests
@@ -66,14 +96,22 @@ class NwcWalletServiceImpl implements NwcWalletService {
     final newConnection =
         await _nwcWallet!.addConnection(permittedMethods: permittedMethods);
 
-    // Todo: save connection to repository
+    // Save connection to local storage
+    await _connectionRepository.saveConnection(
+      NwcConnectionEntity(
+        name: name,
+        pubkey: newConnection.pubkey,
+        permittedMethods: permittedMethods,
+      ),
+    );
 
     return newConnection;
   }
 
   @override
-  Future<List<NwcConnectionEntity>> getSavedConnections() {
-    return Future.value([]); // Todo: get stored connections from repository
+  Future<List<NwcConnectionEntity>> getSavedConnections() async {
+    final connections = await _connectionRepository.getConnections();
+    return connections;
   }
 
   @override
@@ -112,6 +150,8 @@ class NwcWalletServiceImpl implements NwcWalletService {
             print(
                 'NwcWalletService: Unknown NWC request method: ${request.method}');
         }
+        _lastSeenRequestTimestampRepository
+            .updateLastSeenRequestTimestamp(request.createdAt);
       },
       onError: (e) {
         print('NwcWalletService: Error listening to NWC requests: $e');

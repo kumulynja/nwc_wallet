@@ -14,6 +14,24 @@ class NwcConnectionEntity extends Equatable {
   final String pubkey;
   final List<NwcMethod> permittedMethods;
 
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'pubkey': pubkey,
+      'permittedMethods': permittedMethods.map((e) => e.plaintext).toList(),
+    };
+  }
+
+  factory NwcConnectionEntity.fromJson(Map<String, dynamic> json) {
+    return NwcConnectionEntity(
+      name: json['name'] as String,
+      pubkey: json['pubkey'] as String,
+      permittedMethods: (json['permittedMethods'] as List)
+          .map((e) => NwcMethod.fromPlaintext(e as String))
+          .toList(),
+    );
+  }
+
   @override
   List<Object?> get props => [
         name,

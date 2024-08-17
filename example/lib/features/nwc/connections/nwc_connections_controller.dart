@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:nwc_wallet_app/features/nwc/connections/nwc_connections_state.dart';
 import 'package:nwc_wallet_app/services/nwc_wallet_service/nwc_wallet_service.dart';
 import 'package:nwc_wallet_app/view_models/nwc_connection_view_model.dart';
@@ -17,6 +18,7 @@ class NwcConnectionsController {
 
   Future<void> init() async {
     final connections = await _nwcWalletService.getSavedConnections();
+    debugPrint('Connections: $connections');
 
     _updateState(_getState().copyWith(
       activeConnections: connections

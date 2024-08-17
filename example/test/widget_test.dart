@@ -5,7 +5,11 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:nwc_wallet_app/repositories/connection_repository.dart';
 import 'package:nwc_wallet_app/repositories/mnemonic_repository.dart';
+import 'package:nwc_wallet_app/repositories/wallet_token_repository.dart';
 import 'package:nwc_wallet_app/services/lightning_wallet_service/impl/ldk_node_lightning_wallet_service.dart';
 import 'package:nwc_wallet_app/services/nwc_wallet_service/nwc_wallet_service.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +20,11 @@ import 'package:nwc_wallet_app/main.dart';
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     final mnemonicRepository = SecureStorageMnemonicRepository();
+    final pushTokenRepository = FirestoreWalletTokenRepository(
+      firestore: FirebaseFirestore.instance,
+      firebaseMessaging: FirebaseMessaging.instance,
+    );
+    final connectionRepository = SecureStorageConnectionRepository();
     final ldkNodeLightningWalletService = LdkNodeLightningWalletService(
       mnemonicRepository: mnemonicRepository,
     );
@@ -23,6 +32,8 @@ void main() {
     final nwcWalletService = NwcWalletServiceImpl(
       lightningWalletService: ldkNodeLightningWalletService,
       mnemonicRepository: mnemonicRepository,
+      connectionRepository: connectionRepository,
+      pushTokenRepository: pushTokenRepository,
     );
     // Build our app and trigger a frame.
     await tester.pumpWidget(MyApp(

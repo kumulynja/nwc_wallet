@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "613486625262",
+    "project_id": "nwc-wallet",
+    "storage_bucket": "nwc-wallet.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:613486625262:android:34f3654350eeccb58aceff",
+        "android_client_info": {
+          "package_name": "dev.nwc.wallet.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_ivLaI0ZQIkeWqGPGGjUoKca5LKaVDyo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
